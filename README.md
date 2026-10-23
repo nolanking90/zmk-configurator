@@ -1,0 +1,29 @@
+# ZMK Configurator
+
+A visual keymap editor for [ZMK](https://zmk.dev) keyboards, modeled on the ZSA Oryx configurator.
+
+**Live:** https://nolanking90.github.io/zmk-configurator/
+
+- 110 in-tree ZMK keyboards (Corne, Sofle, Lily58, Kyria, Glove80, Sweep, Advantage 360, …) with real physical layouts
+- Per-key tap / hold / double-tap / tap-and-hold (mod-tap, layer-tap, custom hold-tap, tap dance)
+- Layers (32), layer colors, key colors and labels, drag to swap/copy, copy/paste, undo/redo
+- Combos, macros (text, keys, delays, recorder), one-shot keys, Bluetooth/output/RGB/mouse/system behaviors
+- OS keyboard language (de, fr, uk, …) for legends and text macros
+- Global settings → hold-tap tuning and Kconfig (.conf)
+- Revisions with diff and restore, share links, print view, typing trainer
+- Import existing `.keymap` files; export a complete zmk-config repo, or push to GitHub and build firmware from the browser
+
+## Development
+
+```sh
+npm install
+npm run dev
+npx vitest run
+```
+
+Data generators (take a local clone of zmkfirmware/zmk at the pinned revision):
+
+```sh
+node scripts/gen-keyboards.mjs ../zmk
+node scripts/gen-default-keymaps.mjs ../zmk
+```
