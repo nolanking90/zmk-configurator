@@ -38,6 +38,17 @@ export interface KeyConfig {
   color?: string
   /** per-key tapping term override (ms) for dual-function keys */
   tappingTerm?: number
+  /** sent instead of `tap` while Shift is held (ZMK mod-morph) */
+  shifted?: Action
+  /** hold-tap: if released with no other key pressed after the tapping term, still send the tap */
+  retroTap?: boolean
+}
+
+export interface EncoderConfig {
+  /** clockwise rotation */
+  cw?: Action
+  /** counter-clockwise rotation */
+  ccw?: Action
 }
 
 export interface Layer {
@@ -46,6 +57,8 @@ export interface Layer {
   color?: string
   /** one entry per physical key, same order as KeyboardDef.keys */
   keys: KeyConfig[]
+  /** one entry per encoder (KeyboardDef.encoders); missing = transparent */
+  encoders?: EncoderConfig[]
 }
 
 export interface Combo {
@@ -89,6 +102,8 @@ export interface Settings {
   /** "positional hold-tap": only trigger hold when the other key is on the opposite hand */
   positionalHoldTap: boolean
   holdTriggerOnRelease: boolean
+  /** hold-tap: activate the hold behavior while still undecided (useful for mods with mouse) */
+  holdWhileUndecided: boolean
   tapDanceTerm: number
   comboTimeout: number
   stickyKeyTimeout: number
@@ -180,6 +195,8 @@ export interface KeyboardDef {
   keys: PhysicalKey[]
   /** index of the first right-half key for split boards' hand detection; optional */
   hands?: ('L' | 'R')[]
+  /** number of rotary encoders (sensor-bindings entries per layer) */
+  encoders?: number
   /** extra devicetree / includes needed in the keymap, rarely used */
   notes?: string
   source?: string

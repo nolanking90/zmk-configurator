@@ -13,6 +13,7 @@ const keyText = (l: Layout, k: Layout['layers'][number]['keys'][number] | undefi
   if (k.hold) parts.push('hold ' + actionLabel(k.hold, l))
   if (k.doubleTap) parts.push('2× ' + actionLabel(k.doubleTap, l))
   if (k.tapHold) parts.push('tap-hold ' + actionLabel(k.tapHold, l))
+  if (k.shifted) parts.push('shift ' + actionLabel(k.shifted, l))
   if (k.label) parts.push(`“${k.label}”`)
   if (k.color) parts.push(k.color)
   return parts.join(', ')

@@ -124,7 +124,7 @@ export function keyIsDual(k: KeyConfig) {
 
 /** layer id that a key leads to (for coloring keys like Oryx does) */
 export function keyTargetLayer(k: KeyConfig): string | undefined {
-  for (const a of [k.tap, k.hold, k.doubleTap, k.tapHold]) if (a?.type === 'layer') return a.layer
+  for (const a of [k.tap, k.hold, k.doubleTap, k.tapHold, k.shifted]) if (a?.type === 'layer') return a.layer
 }
 
 export function sameAction(a?: Action, b?: Action) {

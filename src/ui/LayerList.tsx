@@ -47,7 +47,7 @@ export function LayerList({ layout }: { layout: Layout }) {
       const fix = (a: unknown) => (a as { type?: string; layer?: string })?.type === 'layer' && (a as { layer: string }).layer === id
       for (const l of d.layers)
         for (const k of l.keys)
-          for (const s of ['tap', 'hold', 'doubleTap', 'tapHold'] as const)
+          for (const s of ['tap', 'hold', 'doubleTap', 'tapHold', 'shifted'] as const)
             if (fix(k[s])) {
               if (s === 'tap') k.tap = { type: 'none' }
               else delete k[s]

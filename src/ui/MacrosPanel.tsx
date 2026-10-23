@@ -85,7 +85,7 @@ export function MacrosPanel({ layout }: { layout: Layout }) {
   }
   const edit = (fn: (m: Macro) => void, tag?: string) => update(layout.id, (d) => { fn(d.macros[mi]) }, tag)
   const usedBy = (id: string) =>
-    layout.layers.some((l) => l.keys.some((k) => [k.tap, k.hold, k.doubleTap, k.tapHold].some((a) => a?.type === 'macro' && a.id === id))) ||
+    layout.layers.some((l) => l.keys.some((k) => [k.tap, k.hold, k.doubleTap, k.tapHold, k.shifted].some((a) => a?.type === 'macro' && a.id === id))) ||
     layout.combos.some((c) => c.action.type === 'macro' && c.action.id === id)
 
   return (

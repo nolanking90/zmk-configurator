@@ -102,8 +102,9 @@ function KeyboardInner(props: KeyboardViewProps) {
 
         const isTrans = k.tap?.type === 'trans' && !k.hold && !k.doubleTap && !k.tapHold
         const main = k.label || actionLabel(k.tap, layout)
-        const shift =
-          !compact && k.tap?.type === 'key' && !k.tap.mods?.length && !k.label
+        const shift = k.shifted
+          ? actionLabel(k.shifted, layout)
+          : !compact && k.tap?.type === 'key' && !k.tap.mods?.length && !k.label
             ? keyShiftLabel(k.tap.code, layout.settings.locale)
             : undefined
         const hold = k.hold && k.hold.type !== 'none' ? actionLabel(k.hold, layout) : ''

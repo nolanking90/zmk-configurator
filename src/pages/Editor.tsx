@@ -12,8 +12,10 @@ import { RevisionsPanel } from '../ui/RevisionsPanel'
 import { CodePanel } from '../ui/CodePanel'
 import { OverviewPanel } from '../ui/OverviewPanel'
 import { ExportDialog } from '../ui/ExportDialog'
+import { StudioDialog } from '../ui/StudioDialog'
 import { ShareDialog } from '../ui/ShareDialog'
 import { InfoPanel } from '../ui/InfoPanel'
+import { EncoderPanel } from '../ui/EncoderPanel'
 import { uid } from '../model/defaults'
 import type { KeyConfig } from '../model/types'
 import { toast } from '../ui/Toast'
@@ -43,6 +45,7 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
   const setClipboard = useStore((s) => s.setClipboard)
   const [exportOpen, setExportOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [studioOpen, setStudioOpen] = useState(false)
   const kb = layout ? getKeyboard(layout.keyboard) : undefined
   const v = (VIEWS.some((x) => x.id === view) ? view : 'keys') as EditorView
   const setView = (nv: EditorView) => navigate(`/layout/${id}/${nv}`)
@@ -170,6 +173,7 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
         <button onClick={() => setShareOpen(true)}>Share</button>
         <button onClick={() => navigate(`/layout/${id}/train`)}>Train</button>
         <button onClick={() => navigate(`/layout/${id}/print`)}>Print</button>
+        <button onClick={() => setStudioOpen(true)} title="Read / write the keymap of a connected keyboard via ZMK Studio">Live (ZMK Studio)</button>
         <button className="primary" onClick={() => setExportOpen(true)}>Download / Build firmware</button>
       </div>
       <div className="editor">
@@ -209,6 +213,7 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
                     onKeyDrop={onKeyDrop}
                   />
                 </div>
+                <EncoderPanel layout={layout} kb={kb} layerIndex={sel.layer} />
                 <KeyEditor layout={layout} onCreateMacro={createMacro} />
               </>
             )}
@@ -224,6 +229,7 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
       </div>
       {exportOpen && <ExportDialog layout={layout} kb={kb} onClose={() => setExportOpen(false)} />}
       {shareOpen && <ShareDialog layout={layout} onClose={() => setShareOpen(false)} />}
+      {studioOpen && <StudioDialog layout={layout} kb={kb} onClose={() => setStudioOpen(false)} />}
     </>
   )
 }

@@ -10,6 +10,7 @@ export const defaultSettings = (): Settings => ({
   holdTapFlavor: 'balanced',
   positionalHoldTap: false,
   holdTriggerOnRelease: false,
+  holdWhileUndecided: false,
   tapDanceTerm: 200,
   comboTimeout: 50,
   stickyKeyTimeout: 1000,
