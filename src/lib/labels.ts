@@ -3,11 +3,12 @@ import { findKeycode, isModifierCode } from '../data/keycodes'
 import { localeLabel } from '../data/locales'
 import { BEHAVIOR_PRESETS, getBehavior } from '../data/behaviors'
 
+/** keycap legends for modifiers; words read better than ⌃⇧⌥ at keycap size */
 export const MOD_SYMBOL: Record<Mod, string> = {
-  LCTRL: '⌃', RCTRL: '⌃',
-  LSHIFT: '⇧', RSHIFT: '⇧',
-  LALT: '⌥', RALT: '⌥',
-  LGUI: '◆', RGUI: '◆',
+  LCTRL: 'Ctrl', RCTRL: 'R Ctrl',
+  LSHIFT: 'Shift', RSHIFT: 'R Shift',
+  LALT: 'Alt', RALT: 'R Alt',
+  LGUI: 'GUI', RGUI: 'R GUI',
 }
 
 export const MOD_NAME: Record<Mod, string> = {
@@ -28,7 +29,7 @@ const LAYER_MODE_PREFIX = { mo: 'MO', tog: 'TG', to: 'TO', sl: 'OSL' } as const
 
 export function keyLabel(code: string, locale = 'us'): string {
   const mod = isModifierCode(code)
-  if (mod) return MOD_SYMBOL[mod] + (mod.startsWith('R') ? 'R' : '')
+  if (mod) return MOD_SYMBOL[mod]
   if (locale !== 'us') {
     const l = localeLabel(code, locale)
     if (l) return l.label
@@ -42,7 +43,7 @@ export function keyShiftLabel(code: string, locale = 'us'): string | undefined {
 }
 
 function modPrefix(mods?: Mod[]) {
-  return (mods ?? []).map((m) => MOD_SYMBOL[m]).join('')
+  return (mods ?? []).map((m) => MOD_SYMBOL[m] + '+').join('')
 }
 
 /** short keycap legend for an action */
