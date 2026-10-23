@@ -76,8 +76,25 @@ export class GitHub {
     })
   }
 
-  /** Commit a full set of files on top of `branch` (files not listed are kept). Returns the new commit sha. */
+  /** Commit files on top of `branch`, retrying while a just-created repo's git database initializes. */
   async commitFiles(full: string, branch: string, files: Record<string, string>, message: string): Promise<string> {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.commitFilesOnce(full, branch, files, message)
+      } catch (e) {
+        if (!(e instanceof GitHubError) || ![404, 409].includes(e.status)) throw e
+        if (attempt >= 4) {
+          if (e.status === 404 && Object.keys(files).some((f) => f.startsWith('.github/workflows/')))
+            throw new GitHubError(404, 'GitHub refused to write .github/workflows/build.yml — your token needs the “workflow” scope (classic) or Workflows: read & write (fine-grained).')
+          throw e
+        }
+        await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)))
+      }
+    }
+  }
+
+  /** Commit a full set of files on top of `branch` (files not listed are kept). Returns the new commit sha. */
+  async commitFilesOnce(full: string, branch: string, files: Record<string, string>, message: string): Promise<string> {
     const ref = await this.req<{ object: { sha: string } }>(`/repos/${full}/git/ref/heads/${encodeURIComponent(branch)}`)
     const parentSha = ref.object.sha
     const parent = await this.req<{ tree: { sha: string } }>(`/repos/${full}/git/commits/${parentSha}`)
