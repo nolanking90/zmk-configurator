@@ -6,7 +6,8 @@ import { BEHAVIOR_PRESETS, BEHAVIORS, getBehavior, type BehaviorPreset } from '.
 import { LAYER_MODE_NAME, MOD_NAME, actionDescription, keyLabel, sameAction } from '../lib/labels'
 import { domCodeToZmk } from '../lib/domcodes'
 import { SHORTCUTS } from '../data/shortcuts'
-import { Icon, Legend, legendLength } from './Icon'
+import { Icon, Legend } from './Icon'
+import { legendLength } from '../lib/legend'
 
 type Cat =
   | KeyCategory
@@ -93,12 +94,11 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
     onChange({ type: sticky ? 'sticky' : 'key', code, ...(keepMods.length ? { mods: keepMods } : {}) })
   }
 
+  // the modifier row only adds modifiers to the chosen key (e.g. Ctrl + C); a modifier key
+  // on its own is picked from the grid like any other key
   const toggleMod = (m: Mod) => {
-    if (!value || (value.type !== 'key' && value.type !== 'sticky')) {
-      // a modifier on its own
-      onChange({ type: 'key', code: canonicalCode(m) })
-      return
-    }
+    if (!value || (value.type !== 'key' && value.type !== 'sticky')) return
+    if (curCode && isModifierCode(curCode) === m) return
     const next = mods.includes(m) ? mods.filter((x) => x !== m) : [...mods, m]
     onChange({ ...value, mods: next.length ? next : undefined })
   }
@@ -152,7 +152,8 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
   )
 
   const BASIC = [
-    'ESC', 'TAB', 'RET', 'SPACE', 'BSPC', 'DEL', 'LSHIFT', 'LCTRL', 'LALT', 'LGUI',
+    'ESC', 'TAB', 'RET', 'SPACE', 'BSPC', 'DEL',
+    'LSHIFT', 'LCTRL', 'LALT', 'LGUI', 'RSHIFT', 'RCTRL', 'RALT', 'RGUI',
     'LEFT', 'DOWN', 'UP', 'RIGHT', 'HOME', 'END', 'PG_UP', 'PG_DN', 'CAPS', 'K_APP',
   ]
 
@@ -272,15 +273,16 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
       </div>
       <div className="row wrap" style={{ gap: 4 }}>
         <span className="small muted" style={{ marginRight: 4 }}>
-          Modifiers:
+          Add modifiers:
         </span>
         <div className="mods">
           {ALL_MODS.map((m) => (
             <button
               key={m}
-              className={`small ${mods.includes(m) || (curCode && isModifierCode(curCode) === m) ? 'active' : ''}`}
+              className={`small ${mods.includes(m) ? 'active' : ''}`}
               onClick={() => toggleMod(m)}
-              title={isKeyish ? `Add ${MOD_NAME[m]} to this key` : `Send ${MOD_NAME[m]}`}
+              disabled={!isKeyish || (!!curCode && isModifierCode(curCode) === m)}
+              title={isKeyish ? `Hold ${MOD_NAME[m]} together with this key` : 'Choose a key first'}
             >
               {MOD_NAME[m]}
             </button>

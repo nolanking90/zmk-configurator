@@ -1,3 +1,5 @@
+import { TOKEN } from '../lib/legend'
+
 // One consistent line-icon set, drawn as inline SVG so legends look the same in
 // every browser and font (Unicode symbols like ⏯ ☀ ⏻ render as mismatched emoji).
 
@@ -53,7 +55,6 @@ const P: Record<string, React.ReactNode> = {
 
 export type IconName = keyof typeof P
 
-export const ICON_NAMES = Object.keys(P)
 
 export function Icon({ name, size = '1em', title, style }: { name: string; size?: number | string; title?: string; style?: React.CSSProperties }) {
   const body = P[name]
@@ -78,17 +79,6 @@ export function Icon({ name, size = '1em', title, style }: { name: string; size?
   )
 }
 
-/** Spoken/plain form of each icon token, for tooltips, <option>s and text exports. */
-const WORDS: Record<string, string> = {
-  'play': 'Play', 'pause': 'Pause', 'play-pause': 'Play/Pause', 'stop': 'Stop', 'record': 'Rec', 'next': 'Next',
-  'prev': 'Prev', 'ff': 'FF', 'rw': 'Rew', 'eject': 'Eject', 'power': 'Power', 'sun': 'Bright', 'up': 'Up',
-  'down': 'Down', 'left': 'Left', 'right': 'Right', 'first': 'First', 'last': 'Last', 'enter': 'Enter',
-  'globe': 'Globe', 'trans': 'Trans', 'none': 'None', 'check': 'OK', 'x': 'X', 'cycle': 'Cycle', 'mouse': 'Mouse',
-  'wheel': 'Wheel', 'bluetooth': 'BT', 'space': 'Space', 'backspace': 'Bksp',
-}
-
-const TOKEN = /\{([a-z-]+)\}/g
-
 /** Legend strings may embed icons as {name} tokens, e.g. "RGB {power}". */
 export function Legend({ text }: { text: string }) {
   if (!text.includes('{')) return <>{text}</>
@@ -103,12 +93,3 @@ export function Legend({ text }: { text: string }) {
   return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.12em' }}>{out}</span>
 }
 
-/** Legend as plain text (icon tokens become words). */
-export function legendText(text: string): string {
-  return text.replace(TOKEN, (_, n: string) => WORDS[n] ?? n).replace(/\s+/g, ' ').trim()
-}
-
-/** Visual length of a legend, counting each icon as one character (for font sizing). */
-export function legendLength(text: string): number {
-  return [...text.replace(TOKEN, '#')].length
-}

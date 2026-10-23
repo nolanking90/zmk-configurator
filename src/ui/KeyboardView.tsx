@@ -2,7 +2,8 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardDef, Layer, Layout, PhysicalKey } from '../model/types'
 import { actionLabel, keyShiftLabel, keyTargetLayer } from '../lib/labels'
 import { contrastText } from '../lib/color'
-import { Icon, Legend, legendLength, legendText } from './Icon'
+import { Icon, Legend } from './Icon'
+import { legendLength, legendText } from '../lib/legend'
 import { encoderAtKey } from '../data/keyboards'
 
 export interface KeyboardViewProps {

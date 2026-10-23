@@ -2,7 +2,7 @@ import type { Action, KeyConfig, Layout, Mod } from '../model/types'
 import { findKeycode, isModifierCode } from '../data/keycodes'
 import { localeLabel } from '../data/locales'
 import { BEHAVIOR_PRESETS, getBehavior } from '../data/behaviors'
-import { legendText } from '../ui/Icon'
+import { legendText } from './legend'
 
 /** keycap legends for modifiers: the same word for both sides (position shows the side; tooltips name it) */
 export const MOD_SYMBOL: Record<Mod, string> = {
