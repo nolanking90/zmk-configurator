@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { produce, type Draft } from 'immer'
 import type { Layout, Revision } from '../model/types'
-import { uid } from '../model/defaults'
+import { defaultSettings, uid } from '../model/defaults'
 import { deleteLayoutDb, loadLayouts, loadRevisions, saveLayout, saveRevisions } from './db'
 
 const HISTORY_LIMIT = 200
@@ -61,7 +61,8 @@ export const useStore = create<State>()((set, get) => ({
 
   async init() {
     if (get().ready) return
-    const all = await loadLayouts()
+    // fill in settings added after a layout was saved
+    const all = (await loadLayouts()).map((l) => ({ ...l, settings: { ...defaultSettings(), ...l.settings } }))
     set({ ready: true, layouts: Object.fromEntries(all.map((l) => [l.id, l])) })
   },
 
