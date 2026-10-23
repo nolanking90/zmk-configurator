@@ -250,7 +250,9 @@ function ReadPanel(props: { layout: Layout; kb: KeyboardDef; snap: DeviceSnapsho
     if (!confirm(`Replace all ${layout.layers.length} layers of “${layout.name}” with the keymap read from the keyboard? (Undo is available.)`)) return
     const r = deviceKeymapToLayers(snap.keymap, snap.index, kb.keys.length, uid, layout.layers)
     update(layout.id, (d) => {
-      d.layers = r.layers
+      // Studio can't read encoder rotation, so keep what this layout already has
+      const enc = d.layers.map((l) => l.encoders)
+      d.layers = r.layers.map((l, i) => (enc[i] ? { ...l, encoders: enc[i] } : l))
     })
     toast(r.warnings.length ? `Loaded; ${r.warnings.length} key(s) kept as raw bindings` : 'Loaded the keyboard’s keymap')
   }
@@ -272,6 +274,9 @@ function ReadPanel(props: { layout: Layout; kb: KeyboardDef; snap: DeviceSnapsho
               <> Physical layout: <b>{snap.physical.layouts[snap.physical.activeLayoutIndex]?.name}</b> (of {snap.physical.layouts.length}).</>
             )}
           </div>
+          {(kb.encoders ?? 0) > 0 && (
+            <div className="help">Encoder rotation can’t be read over ZMK Studio; loading into this layout keeps the rotation you set here.</div>
+          )}
           {warnings.length > 0 && (
             <details className="small">
               <summary className="warn">{warnings.length} binding(s) can’t be modelled and will be imported as raw bindings</summary>

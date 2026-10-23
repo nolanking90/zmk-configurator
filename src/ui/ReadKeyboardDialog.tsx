@@ -89,6 +89,10 @@ export function ReadKeyboardDialog({ onClose }: { onClose: () => void }) {
           <p>
             Read <b>{snap.name}</b>: {snap.keymap.layers.length} layers, {deviceKeyCount(snap)} keys.
           </p>
+          <p className="help">
+            ZMK Studio can’t read encoder rotation, combos, macros or timing settings from a keyboard, so those start empty.
+            Set them in the editor once; they’re included in every firmware you build from here.
+          </p>
           <label className="field">
             Keyboard
             <select value={kbId} onChange={(e) => setKbId(e.target.value)}>
