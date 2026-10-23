@@ -530,7 +530,11 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
     const b = getBehavior(r)
     if (!b) continue
     if (b.include) includes.add(includeLine(b.include))
-    if (b.kconfig) behaviorKconfig.push(...b.kconfig)
+    // Studio is enabled per-target via build.yaml (central only), never in the shared .conf
+    if (b.kconfig) behaviorKconfig.push(...b.kconfig.filter((l) => !l.startsWith('CONFIG_ZMK_STUDIO=')))
+  }
+  if (c.refs.has('studio_unlock') && !s.studio) {
+    c.warn('&studio_unlock is used but ZMK Studio is disabled in settings')
   }
   if (c.refs.has('rgb_ug') && !s.rgbUnderglow) {
     c.warn('&rgb_ug is used but RGB underglow is disabled in settings; it only works on boards with an LED strip and CONFIG_ZMK_RGB_UNDERGLOW=y')

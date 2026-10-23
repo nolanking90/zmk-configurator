@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardDef, Layer, Layout, PhysicalKey } from '../model/types'
 import { actionLabel, keyShiftLabel, keyTargetLayer } from '../lib/labels'
 import { contrastText } from '../lib/color'
@@ -16,6 +16,8 @@ export interface KeyboardViewProps {
   onKeyDrop?: (from: number, to: number, copy: boolean) => void
   onKeyDoubleClick?: (index: number) => void
   compact?: boolean
+  /** shrink the unit so the keyboard fits its container's width */
+  fit?: boolean
 }
 
 function corners(k: PhysicalKey) {
@@ -48,6 +50,24 @@ export function keyboardBounds(kb: KeyboardDef) {
 }
 
 export function KeyboardView(props: KeyboardViewProps) {
+  const b0 = useMemo(() => keyboardBounds(props.kb), [props.kb])
+  const ref = useRef<HTMLDivElement>(null)
+  const [avail, setAvail] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    if (!props.fit || !ref.current) return
+    const el = ref.current
+    const ro = new ResizeObserver(() => setAvail(el.clientWidth))
+    ro.observe(el)
+    setAvail(el.clientWidth)
+    return () => ro.disconnect()
+  }, [props.fit])
+  const maxUnit = props.unit ?? 58
+  const unit = props.fit && avail ? Math.max(28, Math.min(maxUnit, Math.floor(avail / b0.width))) : maxUnit
+  if (props.fit) return <div ref={ref} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}><KeyboardInner {...props} unit={unit} /></div>
+  return <KeyboardInner {...props} unit={unit} />
+}
+
+function KeyboardInner(props: KeyboardViewProps) {
   const { kb, layout, layer, unit = 58, selected = [], highlight, dimmed, pressed, compact } = props
   const b = useMemo(() => keyboardBounds(kb), [kb])
   const [dragOver, setDragOver] = useState<number | null>(null)

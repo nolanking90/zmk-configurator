@@ -156,7 +156,7 @@ function Trainer({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
           </div>
         )}
         <div className="kb-wrap">
-          <KeyboardView kb={kb} layout={layout} layer={layout.layers[shownLayer]} selected={highlight} highlight={holdKeys} />
+          <KeyboardView fit kb={kb} layout={layout} layer={layout.layers[shownLayer]} selected={highlight} highlight={holdKeys} />
         </div>
         {worst.length > 0 && (
           <div className="small muted">Most missed: {worst.map(([c, n]) => `${c === ' ' ? '␣' : c} ×${n}`).join(' · ')}</div>

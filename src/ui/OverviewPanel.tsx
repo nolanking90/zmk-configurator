@@ -18,6 +18,7 @@ export function OverviewPanel({ layout, kb, unit = 44 }: { layout: Layout; kb: K
           </div>
           <div className="kb-wrap" style={{ justifyContent: 'flex-start' }}>
             <KeyboardView
+              fit
               kb={kb}
               layout={layout}
               layer={l}

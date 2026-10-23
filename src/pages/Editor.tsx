@@ -200,6 +200,7 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
                 </div>
                 <div className="kb-wrap">
                   <KeyboardView
+                    fit
                     kb={kb}
                     layout={layout}
                     layer={layer}

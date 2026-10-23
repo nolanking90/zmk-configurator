@@ -6,6 +6,10 @@
 #
 # Usage:
 #   scripts/verify-build.sh <generated-config-dir> <board> [shield] [-- extra cmake args]
+#   scripts/verify-build.sh <generated-config-dir> --all
+#
+# --all builds every target listed in the repo's build.yaml (board, shield,
+# snippet and cmake-args are honoured), like the GitHub Actions workflow does.
 #
 # <generated-config-dir> is the root of a zmk-config repo (it must contain
 # config/west.yml). The west workspace (zmk + zephyr + modules, ~2-3 GB) is
@@ -25,7 +29,27 @@
 set -euo pipefail
 
 if [[ $# -lt 2 ]]; then
-  sed -n '2,25p' "$0"; exit 2
+  sed -n '2,30p' "$0"; exit 2
+fi
+
+if [[ $2 == "--all" ]]; then
+  CFG=$1
+  [[ -f $CFG/build.yaml ]] || { echo "error: $CFG/build.yaml not found" >&2; exit 2; }
+  # minimal parser for the flat `include:` list ZMK's build.yaml uses
+  mapfile -t ENTRIES < <(awk '
+    /^[[:space:]]*-[[:space:]]*board:/ { if (b != "") print b "|" sh "|" sn "|" ca; b=$NF; sh=""; sn=""; ca=""; next }
+    /^[[:space:]]*shield:/ { sh=$2 }
+    /^[[:space:]]*snippet:/ { sn=$2 }
+    /^[[:space:]]*cmake-args:/ { sub(/^[[:space:]]*cmake-args:[[:space:]]*/, ""); ca=$0 }
+    END { if (b != "") print b "|" sh "|" sn "|" ca }' "$CFG/build.yaml")
+  rc=0
+  for e in "${ENTRIES[@]}"; do
+    IFS='|' read -r b sh sn ca <<<"$e"
+    echo "=== building $b ${sh:+($sh)} ${sn:+snippet=$sn} $ca"
+    # shellcheck disable=SC2086
+    SNIPPET=$sn "$0" "$CFG" "$b" $sh -- $ca || rc=1
+  done
+  exit $rc
 fi
 
 CFG_DIR=$(cd "$1" && pwd); shift

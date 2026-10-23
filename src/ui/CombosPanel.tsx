@@ -61,6 +61,7 @@ export function CombosPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef })
           </div>
           <div className="kb-wrap">
             <KeyboardView
+              fit
               kb={kb}
               layout={layout}
               layer={layout.layers[viewLayer]}
