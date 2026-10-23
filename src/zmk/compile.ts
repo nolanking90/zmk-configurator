@@ -141,6 +141,7 @@ class Compiler {
         return this.ref(l)
       }
       case 'behavior': {
+        if (this.gatedOff(a.behavior)) return this.ref('none')
         this.refs.add(a.behavior)
         return formatBinding(a.behavior, a.params.filter((p) => p !== ''))
       }
@@ -152,6 +153,22 @@ class Compiler {
         return code || this.ref('none')
       }
     }
+  }
+
+  /**
+   * Behaviors whose driver is only compiled when a hardware feature is enabled.
+   * Referencing them otherwise fails at link time, so they become &none.
+   */
+  private gatedOff(behavior: string): boolean {
+    const gate: Record<string, [boolean, string]> = {
+      rgb_ug: [this.s.rgbUnderglow, 'RGB underglow'],
+      bl: [this.s.backlight, 'backlight'],
+      studio_unlock: [this.s.studio, 'ZMK Studio'],
+    }
+    const g = gate[behavior]
+    if (!g || g[0]) return false
+    this.warn(`&${behavior} needs ${g[1]}, which is disabled in settings; emitted as &none`)
+    return true
   }
 
   private keyParam(code: string, mods?: Mod[]): string {
@@ -183,6 +200,7 @@ class Compiler {
       case 'layer': return { ref: this.ref(a.mode), param: this.layerRef(a.layer) }
       case 'macro': return { ref: this.action(a), param: '0' }
       case 'behavior': {
+        if (this.gatedOff(a.behavior)) return { ref: this.ref('none'), param: '0' }
         const params = a.params.filter((p) => p !== '')
         const cells = BUILTIN_CELLS[a.behavior] ?? getBehavior(a.behavior)?.params.length ?? params.length
         if (cells === 0 && params.length === 0) return { ref: this.ref(a.behavior), param: '0' }
@@ -536,13 +554,6 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
   if (c.refs.has('studio_unlock') && !s.studio) {
     c.warn('&studio_unlock is used but ZMK Studio is disabled in settings')
   }
-  if (c.refs.has('rgb_ug') && !s.rgbUnderglow) {
-    c.warn('&rgb_ug is used but RGB underglow is disabled in settings; it only works on boards with an LED strip and CONFIG_ZMK_RGB_UNDERGLOW=y')
-  }
-  if (c.refs.has('bl') && !s.backlight) {
-    c.warn('&bl is used but backlight is disabled in settings')
-  }
-
   // ---- assemble keymap ----
   const out: string[] = []
   out.push('/*')

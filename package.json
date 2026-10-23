@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@zmkfirmware/zmk-studio-ts-client": "^0.0.18",
     "idb-keyval": "^6.3.0",
     "immer": "^11.2.9",
     "jszip": "^3.10.2",

@@ -8,7 +8,7 @@ const tap = (a: Action): KeyConfig => ({ tap: a })
 const trans: KeyConfig = { tap: { type: 'trans' } }
 
 /** 42-key (corne-sized) layout; pass a key count to pad / truncate. */
-export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42): Layout {
+export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb?: boolean } = {}): Layout {
   const base: KeyConfig[] = [
     // row 0
     { tap: k('TAB') }, { tap: k('Q'), hold: k('LALT'), tappingTerm: 250 }, tap(k('W')), tap(k('E')), tap(k('R')), tap(k('T')),
@@ -65,6 +65,11 @@ export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42): Layout {
   sys[4] = tap({ type: 'behavior', behavior: 'out', params: ['OUT_USB'] })
   sys[5] = tap({ type: 'behavior', behavior: 'out', params: ['OUT_BLE'] })
   sys[6] = tap({ type: 'none' })
+  if (opts.rgb) {
+    sys[7] = tap({ type: 'behavior', behavior: 'rgb_ug', params: ['RGB_TOG'] })
+    sys[8] = tap({ type: 'behavior', behavior: 'rgb_ug', params: ['RGB_COLOR_HSB', '128', '100', '50'] })
+    sys[9] = { tap: k('F1'), hold: { type: 'behavior', behavior: 'rgb_ug', params: ['RGB_EFF'] } }
+  }
 
   const fit = (keys: KeyConfig[]) => (keys.length >= keyCount ? keys.slice(0, keyCount) : [...keys, ...Array.from({ length: keyCount - keys.length }, () => trans)])
 
@@ -84,6 +89,7 @@ export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42): Layout {
     sleepTimeoutMin: 30,
     bleTxPowerPlus8: true,
     extraConf: 'CONFIG_ZMK_COMBO_MAX_PRESSED_COMBOS=6',
+    rgbUnderglow: !!opts.rgb,
     extraKeymap: [
       'behaviors {',
       '    bs_del: bs_del {',
