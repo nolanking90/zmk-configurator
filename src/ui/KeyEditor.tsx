@@ -99,7 +99,7 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
       </div>
       <div className="editor-body col" style={{ gap: 14 }}>
         <div className="slot-tabs">
-          {[...SLOTS, ...ENC_SLOTS].map((s) => {
+          {(enc === undefined ? SLOTS : [...ENC_SLOTS, ...SLOTS.map((x) => (x.id === 'tap' ? { ...x, name: 'Press', help: 'Sent when the encoder knob is pressed.' } : x))]).map((s) => {
             const a = slotValue(s.id)
             const v = a ? actionLabel(a, layout) || (a.type === 'none' ? 'None' : '') : ''
             return (

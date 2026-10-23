@@ -131,7 +131,7 @@ function KeyboardInner(props: KeyboardViewProps) {
             key={i}
             className={cls}
             style={style}
-            title={enc !== undefined ? `Encoder ${enc + 1} (key ${i}): press, rotate left, rotate right` : `Key ${i}`}
+            title={enc !== undefined ? `Encoder ${enc + 1}: press ${legendText(main) || 'none'}, rotate left ${legendText(rot(encCfg?.ccw))}, rotate right ${legendText(rot(encCfg?.cw))}` : `Key ${i}`}
             draggable={!!props.onKeyDrop}
             onDragStart={(e) => e.dataTransfer.setData('text/x-key', String(i))}
             onDragOver={(e) => {
@@ -153,7 +153,7 @@ function KeyboardInner(props: KeyboardViewProps) {
               {tiny ? null : (<>
               <div className="key-top">
                 {enc !== undefined ? (
-                  <span />
+                  <span title="Encoder"><Icon name="cw" /></span>
                 ) : (<>
                 <span>{shift ? <Legend text={shift} /> : ''}</span>
                 <span className="key-dt">{dt ? <>2×<Legend text={dt} /></> : ''}</span>
@@ -172,12 +172,6 @@ function KeyboardInner(props: KeyboardViewProps) {
               )}
               </>)}
             </div>
-            {enc !== undefined && !compact && !tiny && (
-              <div className="enc-caption" title="Rotate left / rotate right">
-                <span><Icon name="ccw" /> <Legend text={rot(encCfg?.ccw)} /></span>
-                <span><Icon name="cw" /> <Legend text={rot(encCfg?.cw)} /></span>
-              </div>
-            )}
           </div>
         )
       })}
