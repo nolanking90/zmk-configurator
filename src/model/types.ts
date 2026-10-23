@@ -209,6 +209,8 @@ export interface KeyboardDef {
   hands?: ('L' | 'R')[]
   /** number of rotary encoders (sensor-bindings entries per layer) */
   encoders?: number
+  /** key position of each encoder's push switch, when the encoder is also a key in the matrix */
+  encoderKeys?: (number | null)[]
   /** extra devicetree / includes needed in the keymap, rarely used */
   notes?: string
   source?: string

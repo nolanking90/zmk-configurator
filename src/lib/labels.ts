@@ -4,12 +4,12 @@ import { localeLabel } from '../data/locales'
 import { BEHAVIOR_PRESETS, getBehavior } from '../data/behaviors'
 import { legendText } from '../ui/Icon'
 
-/** keycap legends for modifiers; words read better than ⌃⇧⌥ at keycap size */
+/** keycap legends for modifiers: the same word for both sides (position shows the side; tooltips name it) */
 export const MOD_SYMBOL: Record<Mod, string> = {
-  LCTRL: 'Ctrl', RCTRL: 'R Ctrl',
-  LSHIFT: 'Shift', RSHIFT: 'R Shift',
-  LALT: 'Alt', RALT: 'R Alt',
-  LGUI: 'GUI', RGUI: 'R GUI',
+  LCTRL: 'Ctrl', RCTRL: 'Ctrl',
+  LSHIFT: 'Shift', RSHIFT: 'Shift',
+  LALT: 'Alt', RALT: 'Alt',
+  LGUI: 'GUI', RGUI: 'GUI',
 }
 
 export const MOD_NAME: Record<Mod, string> = {

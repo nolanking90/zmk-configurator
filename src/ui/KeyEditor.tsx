@@ -5,9 +5,11 @@ import { ActionPicker } from './ActionPicker'
 import { actionLabel } from '../lib/labels'
 import { ColorPicker } from './ColorPicker'
 import { Legend } from './Icon'
+import { encoderAtKey, getKeyboard } from '../data/keyboards'
 
-type Slot = 'tap' | 'hold' | 'doubleTap' | 'tapHold' | 'shifted'
-const SLOTS: { id: Slot; name: string; help: string }[] = [
+type KeySlot = 'tap' | 'hold' | 'doubleTap' | 'tapHold' | 'shifted'
+type Slot = KeySlot | 'ccw' | 'cw'
+const SLOTS: { id: KeySlot; name: string; help: string }[] = [
   { id: 'tap', name: 'Tap', help: 'Sent when the key is tapped.' },
   { id: 'hold', name: 'Hold', help: 'Sent when the key is held past the tapping term (mod-tap / layer-tap).' },
   { id: 'doubleTap', name: 'Double tap', help: 'Sent when the key is tapped twice quickly (tap dance).' },
@@ -35,6 +37,15 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
   }
   const key: KeyConfig = layer.keys[idx] ?? {}
   const keys = sel.keys
+  const kb = getKeyboard(layout.keyboard)
+  const enc = kb ? encoderAtKey(kb, idx) : undefined
+  const ENC_SLOTS: { id: 'ccw' | 'cw'; name: string; help: string }[] =
+    enc === undefined ? [] : [
+      { id: 'ccw', name: 'Rotate left', help: 'Sent for each counter-clockwise step of the encoder. Unset = falls through to lower layers.' },
+      { id: 'cw', name: 'Rotate right', help: 'Sent for each clockwise step of the encoder. Unset = falls through to lower layers.' },
+    ]
+  const cur: Slot = (slot === 'ccw' || slot === 'cw') && enc === undefined ? 'tap' : slot
+  const slotValue = (s: Slot) => (s === 'ccw' || s === 'cw' ? layer.encoders?.[enc!]?.[s] : key[s])
 
   const edit = (fn: (k: KeyConfig) => void, tag?: string) =>
     update(
@@ -48,18 +59,30 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
       tag,
     )
 
-  const setAction = (a: Action | undefined) =>
+  const setAction = (a: Action | undefined) => {
+    if (cur === 'ccw' || cur === 'cw') {
+      const n = kb?.encoders ?? 0
+      return update(layout.id, (d) => {
+        const l = d.layers[sel.layer]
+        l.encoders ??= []
+        while (l.encoders.length < n) l.encoders.push({})
+        if (a && a.type !== 'trans') l.encoders[enc!][cur] = a
+        else delete l.encoders[enc!][cur]
+      })
+    }
+    const ks: KeySlot = cur
     edit((k) => {
-      if (a === undefined || (slot !== 'tap' && a.type === 'none')) delete k[slot]
-      else k[slot] = a
-      if (slot === 'tap' && !a) k.tap = { type: 'none' }
+      if (a === undefined || (ks !== 'tap' && a.type === 'none')) delete k[ks]
+      else k[ks] = a
+      if (ks === 'tap' && !a) k.tap = { type: 'none' }
     })
+  }
 
   return (
     <div className="panel editor-panel">
       <div className="editor-head">
         <h2>
-          Key {idx}
+          {enc !== undefined ? `Encoder ${enc + 1}` : `Key ${idx}`}
           {keys.length > 1 && <span className="muted small"> + {keys.length - 1} more</span>}
         </h2>
         <span className="muted small">on layer “{layer.name}”</span>
@@ -76,11 +99,11 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
       </div>
       <div className="editor-body col" style={{ gap: 14 }}>
         <div className="slot-tabs">
-          {SLOTS.map((s) => {
-            const a = key[s.id]
+          {[...SLOTS, ...ENC_SLOTS].map((s) => {
+            const a = slotValue(s.id)
             const v = a ? actionLabel(a, layout) || (a.type === 'none' ? 'None' : '') : ''
             return (
-              <button key={s.id} className={`slot-tab ${slot === s.id ? 'active' : ''}`} onClick={() => setSlot(s.id)} title={s.help}>
+              <button key={s.id} className={`slot-tab ${cur === s.id ? 'active' : ''}`} onClick={() => setSlot(s.id)} title={s.help}>
                 <span>{s.name}</span>
                 <span className="slot-val">{v ? <Legend text={v} /> : '—'}</span>
               </button>
@@ -88,11 +111,11 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
           })}
         </div>
         <ActionPicker
-          value={key[slot]}
+          value={slotValue(cur)}
           onChange={setAction}
           layout={layout}
-          slot={slot === 'shifted' ? 'tap' : slot}
-          allowEmpty={slot !== 'tap'}
+          slot={cur === 'tap' || cur === 'hold' || cur === 'doubleTap' || cur === 'tapHold' ? cur : 'tap'}
+          allowEmpty={cur !== 'tap'}
           onCreateMacro={onCreateMacro}
         />
         <hr style={{ margin: 0 }} />

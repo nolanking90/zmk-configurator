@@ -2,7 +2,8 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardDef, Layer, Layout, PhysicalKey } from '../model/types'
 import { actionLabel, keyShiftLabel, keyTargetLayer } from '../lib/labels'
 import { contrastText } from '../lib/color'
-import { Legend, legendLength, legendText } from './Icon'
+import { Icon, Legend, legendLength, legendText } from './Icon'
+import { encoderAtKey } from '../data/keyboards'
 
 export interface KeyboardViewProps {
   kb: KeyboardDef
@@ -112,6 +113,9 @@ function KeyboardInner(props: KeyboardViewProps) {
         const dt = k.doubleTap ? actionLabel(k.doubleTap, layout) : ''
         const th = k.tapHold ? actionLabel(k.tapHold, layout) : ''
         const len = legendLength(main)
+        const enc = encoderAtKey(kb, i)
+        const encCfg = enc !== undefined ? layer.encoders?.[enc] : undefined
+        const rot = (a?: import('../model/types').Action) => (a ? actionLabel(a, layout) || '{none}' : '{trans}')
         const cls = [
           'key',
           selected[0] === i ? 'selected' : selected.includes(i) ? 'multi' : '',
@@ -119,13 +123,14 @@ function KeyboardInner(props: KeyboardViewProps) {
           dimmed?.includes(i) ? 'dim' : '',
           pressed?.includes(i) ? 'pressed' : '',
           dragOver === i ? 'drag-over' : '',
+          enc !== undefined ? 'encoder' : '',
         ].join(' ')
         return (
           <div
             key={i}
             className={cls}
             style={style}
-            title={`Key ${i}`}
+            title={enc !== undefined ? `Encoder ${enc + 1} (key ${i}): press, rotate left, rotate right` : `Key ${i}`}
             draggable={!!props.onKeyDrop}
             onDragStart={(e) => e.dataTransfer.setData('text/x-key', String(i))}
             onDragOver={(e) => {
@@ -146,8 +151,12 @@ function KeyboardInner(props: KeyboardViewProps) {
             <div className="key-inner" style={{ ...innerStyle, ...(tiny ? { padding: 0, borderRadius: 3, fontSize: 0 } : {}) }}>
               {tiny ? null : (<>
               <div className="key-top">
+                {enc !== undefined ? (
+                  <span />
+                ) : (<>
                 <span>{shift ? <Legend text={shift} /> : ''}</span>
                 <span className="key-dt">{dt ? <>2×<Legend text={dt} /></> : ''}</span>
+                </>)}
               </div>
               <div className={`key-main ${isTrans ? 'trans' : ''} ${len > 9 ? 'xlong' : len > 4 ? 'long' : ''}`}>
                 <Legend text={main} />
@@ -162,6 +171,12 @@ function KeyboardInner(props: KeyboardViewProps) {
               )}
               </>)}
             </div>
+            {enc !== undefined && !compact && !tiny && (
+              <div className="enc-caption" title="Rotate left / rotate right">
+                <span><Icon name="ccw" /> <Legend text={rot(encCfg?.ccw)} /></span>
+                <span><Icon name="cw" /> <Legend text={rot(encCfg?.cw)} /></span>
+              </div>
+            )}
           </div>
         )
       })}

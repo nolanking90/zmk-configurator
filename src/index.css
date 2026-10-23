@@ -186,6 +186,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; width: 1
 .key.drag-over .key-inner { outline: 2px dashed var(--ok); }
 .key.pressed .key-inner { transform: translateY(2px); background: var(--accent-soft); }
 .key.dim .key-inner { opacity: 0.35; }
+.key.encoder .key-inner { border-radius: 50%; border-width: 2px; border-style: dashed; padding: 8px 2px 8px; grid-template-rows: auto 1fr 0; }
+.key.encoder .key-top { font-size: 8.5px; justify-content: center; gap: 3px; min-height: 12px; }
+.key.encoder .key-main { font-size: 11px; }
+.key.encoder .key-hold { display: none; }
+.key.encoder { z-index: 2; }
+.enc-caption { position: absolute; top: 100%; z-index: 3; background: var(--bg); border-radius: 4px; padding: 1px 4px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 10px; line-height: 1.15; color: var(--key-sub); white-space: nowrap; pointer-events: none; }
+.enc-caption > span { display: inline-flex; align-items: center; gap: 3px; }
+.key.encoder .key-top > span { display: inline-flex; align-items: center; gap: 1px; }
 .key-top { font-size: 9.5px; color: var(--key-sub); display: flex; justify-content: space-between; gap: 2px; min-height: 11px; white-space: nowrap; overflow: hidden; }
 .key-main { display: flex; align-items: center; justify-content: center; font-weight: 600; word-break: break-word; overflow: hidden; }
 .key-main.long { font-size: 10.5px; }
