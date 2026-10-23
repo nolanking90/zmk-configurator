@@ -4,6 +4,7 @@ import { getKeyboard } from '../data/keyboards'
 import { navigate } from '../lib/router'
 import { KeyboardView } from '../ui/KeyboardView'
 import { ImportDialog } from '../ui/ImportDialog'
+import { ReadKeyboardDialog } from '../ui/ReadKeyboardDialog'
 import { isLayout, cloneAsNew } from '../lib/share'
 import { toast } from '../ui/Toast'
 import { ThemeToggle } from '../ui/ThemeToggle'
@@ -15,6 +16,7 @@ export function Home() {
   const dup = useStore((s) => s.duplicateLayout)
   const add = useStore((s) => s.addLayout)
   const [importOpen, setImportOpen] = useState(false)
+  const [readOpen, setReadOpen] = useState(false)
   const [q, setQ] = useState('')
   const restoreRef = useRef<HTMLInputElement>(null)
   const list = Object.values(layouts)
@@ -52,6 +54,7 @@ export function Home() {
           <h1 className="grow">My layouts</h1>
           <input placeholder="Search layouts" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 200 }} />
           <button onClick={() => setImportOpen(true)}>Import</button>
+          <button onClick={() => setReadOpen(true)} title="Read the keymap from a connected ZMK Studio keyboard">Read from keyboard</button>
           <button className="primary" onClick={() => navigate('/new')}>+ New layout</button>
         </div>
         {!ready ? (
@@ -66,6 +69,7 @@ export function Home() {
             <div className="row">
               <button className="primary" onClick={() => navigate('/new')}>Create your first layout</button>
               <button onClick={() => setImportOpen(true)}>Import a .keymap</button>
+              <button onClick={() => setReadOpen(true)}>Read from my keyboard</button>
             </div>
           </div>
         ) : (
@@ -104,6 +108,7 @@ export function Home() {
         </div>
       </div>
       {importOpen && <ImportDialog onClose={() => setImportOpen(false)} />}
+      {readOpen && <ReadKeyboardDialog onClose={() => setReadOpen(false)} />}
     </>
   )
 }
