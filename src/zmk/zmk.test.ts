@@ -270,6 +270,8 @@ describe('importKeymap', () => {
       tapHold: { type: 'layer', mode: 'mo', layer: imported.layers[2].id },
     })
     expect(base[41]).toEqual({ tap: { type: 'key', code: 'TAB' }, hold: { type: 'behavior', behavior: 'bt', params: ['BT_CLR'] } })
+    // Studio is a build.yaml setting, not part of the keymap
+    imported.settings.studio = layout.settings.studio
     const second = compileKeymap(imported, corne).keymap
     expect(body(second)).toBe(body(first))
   })

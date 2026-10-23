@@ -145,6 +145,12 @@ class Importer {
     this.settleComboTimeout(combos)
 
     this.settings.extraKeymap = this.extraKeymap()
+    // a keymap using these behaviors presumes the hardware feature is enabled
+    const used = new Set(layers.flatMap((l) => l.keys.flatMap((k) => [k.tap, k.hold, k.doubleTap, k.tapHold]))
+      .flatMap((a) => (a?.type === 'behavior' ? [a.behavior] : [])))
+    if (used.has('rgb_ug')) this.settings.rgbUnderglow = true
+    if (used.has('bl')) this.settings.backlight = true
+    if (used.has('studio_unlock')) this.settings.studio = true
 
     const now = Date.now()
     const layout: Layout = {
@@ -211,7 +217,8 @@ class Importer {
     for (const [label, n] of this.tree.externalOverrides) {
       const handled = new Set(label === 'mt' || label === 'lt'
         ? ['flavor', 'tapping-term-ms', 'quick-tap-ms', 'require-prior-idle-ms', 'hold-trigger-on-release']
-        : label === 'sk' ? ['release-after-ms', 'quick-release'] : [])
+        : label === 'sk' ? ['release-after-ms', 'quick-release']
+          : label === 'sl' && propInt(n, 'release-after-ms') === s.stickyKeyTimeout ? ['release-after-ms'] : [])
       if (label === 'lt' && this.override('mt')) {
         const m = this.override('mt')!
         for (const k of handled) if (!eq(m.props.get(k), n.props.get(k))) this.warn('&mt and &lt have different settings; using the &mt ones for both')
@@ -311,6 +318,10 @@ class Importer {
   }
 
   raw(b: Binding): Action {
+    const cells = this.cellsOf(b.ref)
+    if (cells !== undefined && b.params.length > cells) {
+      this.warn(`"${bindingText(b)}" has more parameters than &${b.ref} takes (undefined macro?)`)
+    }
     const n = this.node(b.ref)
     if (n) this.keep.add(b.ref)
     else if (!getBehavior(b.ref) && !(b.ref in BUILTIN_CELLS)) this.warn(`Unknown behavior &${b.ref} kept as raw binding`)

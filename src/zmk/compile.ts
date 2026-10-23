@@ -458,13 +458,15 @@ function isReservedDefine(name: string): boolean {
 function formatBindings(bindings: string[], kb: KeyboardDef, indent: string): string {
   type Cell = { col: number; text: string }
   const lines: Cell[][] = []
-  let prevY: number | undefined
+  // A new row starts when the key order wraps back to the left, or jumps down
+  // by more than a row (column stagger moves keys within a row by < 1u).
+  let prevY = 0
   let prevX = -Infinity
   bindings.forEach((text, i) => {
     const k = kb.keys[i]
     const x = k ? k.x : prevX + 1
-    const y = k ? Math.round(k.y) : prevY ?? 0
-    if (!lines.length || y !== prevY || x <= prevX) lines.push([])
+    const y = k ? k.y : prevY
+    if (!lines.length || x <= prevX || Math.abs(y - prevY) >= 1.5) lines.push([])
     const line = lines[lines.length - 1]
     let col = Math.round(x)
     if (line.length && col <= line[line.length - 1].col) col = line[line.length - 1].col + 1
