@@ -6,6 +6,7 @@ import { BEHAVIOR_PRESETS, BEHAVIORS, getBehavior, type BehaviorPreset } from '.
 import { LAYER_MODE_NAME, MOD_NAME, actionDescription, keyLabel, sameAction } from '../lib/labels'
 import { domCodeToZmk } from '../lib/domcodes'
 import { SHORTCUTS } from '../data/shortcuts'
+import { Icon, Legend, legendLength } from './Icon'
 
 type Cat =
   | KeyCategory
@@ -123,7 +124,7 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
       title={`${k.name}  (${[k.code, ...k.aliases].join(', ')})`}
       onClick={() => setKey(k.code)}
     >
-      <span>{keyLabel(k.code, locale)}</span>
+      <span><Legend text={keyLabel(k.code, locale)} /></span>
       <small>{k.code.length <= 10 ? k.code : k.name.slice(0, 14)}</small>
     </button>
   )
@@ -137,7 +138,7 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
         title={p.name}
         onClick={() => onChange(a)}
       >
-        <span style={{ fontSize: p.label.length > 6 ? 10.5 : 13 }}>{p.label}</span>
+        <span style={{ fontSize: legendLength(p.label) > 6 ? 10.5 : 13 }}><Legend text={p.label} /></span>
         <small>{p.name.slice(0, 22)}</small>
       </button>
     )
@@ -145,7 +146,7 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
 
   const simple = (a: Action, label: string, sub: string) => (
     <button key={label} className={`pick ${sameAction(value, a) ? 'active' : ''}`} onClick={() => onChange(a)}>
-      <span>{label}</span>
+      <span><Legend text={label} /></span>
       <small>{sub}</small>
     </button>
   )
@@ -167,8 +168,8 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
   } else if (cat === 'basic') {
     body = (
       <div className="picker-grid">
-        {simple({ type: 'none' }, '∅', 'None')}
-        {simple({ type: 'trans' }, '▽', 'Transparent')}
+        {simple({ type: 'none' }, '{none}', 'None')}
+        {simple({ type: 'trans' }, '{trans}', 'Transparent')}
         {BASIC.map((c) => KEYCODES.find((k) => k.code === canonicalCode(c))).filter(Boolean).map((k) => keyButton(k!))}
         {getBehavior('caps_word') && presetButton(BEHAVIOR_PRESETS.find((p) => p.behavior === 'caps_word')!)}
         {getBehavior('key_repeat') && presetButton(BEHAVIOR_PRESETS.find((p) => p.behavior === 'key_repeat')!)}
@@ -259,7 +260,7 @@ export function ActionPicker({ value, onChange, layout, slot = 'tap', allowEmpty
           style={{ width: 260 }}
         />
         <button className={listening ? 'active' : ''} onClick={() => setListening(!listening)} title="Press a key on your keyboard to assign it">
-          {listening ? 'Press a key…' : '⌨ Press to assign'}
+          {listening ? 'Press a key…' : <><Icon name="keyboard" /> Press to assign</>}
         </button>
         {allowEmpty && (
           <button className="ghost" onClick={() => onChange(undefined)}>
@@ -345,7 +346,7 @@ function CustomAction({ value, onChange }: { value?: Action; onChange: (a: Actio
       {def && <p className="help">{def.description}</p>}
       <hr />
       <h3>Raw binding</h3>
-      <p className="help">Any ZMK binding, emitted verbatim — e.g. <code>&amp;my_behavior 1 2</code>. Define custom behaviors in Settings → Advanced.</p>
+      <p className="help">Any ZMK binding, emitted verbatim — e.g. <code>&amp;my_behavior 1 2</code>. Define custom behaviors under Settings, Advanced.</p>
       <div className="row">
         <input className="grow mono" value={raw} placeholder="&kp LC(A)" onChange={(e) => setRaw(e.target.value)} />
         <button className="primary small" disabled={!raw.trim().startsWith('&')} onClick={() => onChange({ type: 'raw', code: raw.trim() })}>

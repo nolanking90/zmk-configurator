@@ -1,6 +1,7 @@
 import { useStore } from '../store/store'
 import { getKeyboard } from '../data/keyboards'
 import { OverviewPanel } from '../ui/OverviewPanel'
+import { Icon } from '../ui/Icon'
 
 export function Print({ id }: { id: string }) {
   const layout = useStore((s) => s.layouts[id])
@@ -9,7 +10,7 @@ export function Print({ id }: { id: string }) {
   return (
     <>
       <div className="topbar">
-        <a className="btn ghost" href={`#/layout/${id}`}>← Back to editor</a>
+        <a className="btn ghost" href={`#/layout/${id}`}><Icon name="left" /> Back to editor</a>
         <span className="spacer" />
         <button className="primary" onClick={() => window.print()}>Print / Save as PDF</button>
       </div>

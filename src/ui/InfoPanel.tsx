@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { KeyboardDef, Layout } from '../model/types'
 import { useStore } from '../store/store'
+import { Icon } from './Icon'
 
 export function InfoPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
   const update = useStore((s) => s.update)
@@ -23,7 +24,7 @@ export function InfoPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
         <div className="row wrap">
           {layout.tags.map((t) => (
             <span key={t} className="badge" style={{ fontSize: 12.5 }}>
-              {t} <button className="ghost small" style={{ padding: 0 }} onClick={() => update(layout.id, (d) => { d.tags = d.tags.filter((x) => x !== t) })}>✕</button>
+              {t} <button className="ghost small" style={{ padding: 0 }} onClick={() => update(layout.id, (d) => { d.tags = d.tags.filter((x) => x !== t) })} aria-label="Remove tag"><Icon name="x" /></button>
             </span>
           ))}
           <input value={tag} placeholder="add tag" style={{ width: 120 }} onChange={(e) => setTag(e.target.value)}

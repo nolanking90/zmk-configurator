@@ -2,6 +2,7 @@ import type { Action, KeyConfig, Layout, Mod } from '../model/types'
 import { findKeycode, isModifierCode } from '../data/keycodes'
 import { localeLabel } from '../data/locales'
 import { BEHAVIOR_PRESETS, getBehavior } from '../data/behaviors'
+import { legendText } from '../ui/Icon'
 
 /** keycap legends for modifiers; words read better than ⌃⇧⌥ at keycap size */
 export const MOD_SYMBOL: Record<Mod, string> = {
@@ -54,7 +55,7 @@ export function actionLabel(a: Action | undefined, layout: Layout): string {
     case 'none':
       return ''
     case 'trans':
-      return '▽'
+      return '{trans}'
     case 'key':
       return modPrefix(a.mods) + keyLabel(a.code, locale)
     case 'sticky':
@@ -78,6 +79,9 @@ export function actionLabel(a: Action | undefined, layout: Layout): string {
       return a.code.replace(/^&/, '')
   }
 }
+
+/** legend as plain text (icons as words), for tooltips and text output */
+export const actionText = (a: Action | undefined, layout: Layout) => legendText(actionLabel(a, layout))
 
 /** longer human description for tooltips / editor headers */
 export function actionDescription(a: Action | undefined, layout: Layout): string {

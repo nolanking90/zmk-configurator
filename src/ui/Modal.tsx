@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Icon } from './Icon'
 
 export function Modal(props: {
   title: React.ReactNode
@@ -17,7 +18,7 @@ export function Modal(props: {
       <div className={`modal ${props.wide ? 'wide' : ''}`} role="dialog">
         <div className="modal-head">
           <h2 className="grow">{props.title}</h2>
-          <button className="ghost" onClick={props.onClose} aria-label="Close">✕</button>
+          <button className="ghost" onClick={props.onClose} aria-label="Close"><Icon name="x" /></button>
         </div>
         <div className="modal-body">{props.children}</div>
         {props.footer && <div className="modal-foot">{props.footer}</div>}

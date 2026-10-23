@@ -4,6 +4,7 @@ import { useStore } from '../store/store'
 import { ActionPicker } from './ActionPicker'
 import { actionLabel } from '../lib/labels'
 import { ColorPicker } from './ColorPicker'
+import { Legend } from './Icon'
 
 type Slot = 'tap' | 'hold' | 'doubleTap' | 'tapHold' | 'shifted'
 const SLOTS: { id: Slot; name: string; help: string }[] = [
@@ -11,7 +12,7 @@ const SLOTS: { id: Slot; name: string; help: string }[] = [
   { id: 'hold', name: 'Hold', help: 'Sent when the key is held past the tapping term (mod-tap / layer-tap).' },
   { id: 'doubleTap', name: 'Double tap', help: 'Sent when the key is tapped twice quickly (tap dance).' },
   { id: 'tapHold', name: 'Tap + hold', help: 'Sent when the key is tapped once, then held (tap dance).' },
-  { id: 'shifted', name: 'Shifted', help: 'Sent instead of the tap action while Shift is held (mod-morph), e.g. , → ;' },
+  { id: 'shifted', name: 'Shifted', help: 'Sent instead of the tap action while Shift is held (mod-morph), e.g. comma sends semicolon when shifted' },
 ]
 
 export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateMacro: () => void }) {
@@ -26,8 +27,8 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
     return (
       <div className="panel editor-panel">
         <div className="editor-body muted">
-          Select a key to edit it. Shift/⌘-click to select several. Drag a key onto another to swap (hold Alt to copy).
-          Shortcuts: ⌘/Ctrl+C / V copy &amp; paste keys, Delete clears, ⌘/Ctrl+Z undo.
+          Select a key to edit it. Shift-click or Ctrl/Cmd-click to select several. Drag a key onto another to swap (hold Alt to copy).
+          Shortcuts: Ctrl/Cmd+C and Ctrl/Cmd+V copy and paste keys, Delete clears, Ctrl/Cmd+Z undoes.
         </div>
       </div>
     )
@@ -63,7 +64,7 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
         </h2>
         <span className="muted small">on layer “{layer.name}”</span>
         <span className="spacer" />
-        <button className="small" onClick={() => setClipboard(structuredClone(key))} title="Copy key (⌘/Ctrl+C)">
+        <button className="small" onClick={() => setClipboard(structuredClone(key))} title="Copy key (Ctrl/Cmd+C)">
           Copy
         </button>
         <button className="small" disabled={!clipboard} onClick={() => clipboard && edit((k) => { Object.keys(k).forEach((p) => delete (k as Record<string, unknown>)[p]); Object.assign(k, structuredClone(clipboard)) })}>
@@ -77,11 +78,11 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
         <div className="slot-tabs">
           {SLOTS.map((s) => {
             const a = key[s.id]
-            const v = a ? actionLabel(a, layout) || (a.type === 'none' ? '∅ none' : '') : ''
+            const v = a ? actionLabel(a, layout) || (a.type === 'none' ? 'None' : '') : ''
             return (
               <button key={s.id} className={`slot-tab ${slot === s.id ? 'active' : ''}`} onClick={() => setSlot(s.id)} title={s.help}>
                 <span>{s.name}</span>
-                <span className="slot-val">{v || '—'}</span>
+                <span className="slot-val">{v ? <Legend text={v} /> : '—'}</span>
               </button>
             )
           })}

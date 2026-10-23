@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardDef, Layer, Layout, PhysicalKey } from '../model/types'
 import { actionLabel, keyShiftLabel, keyTargetLayer } from '../lib/labels'
 import { contrastText } from '../lib/color'
+import { Legend, legendLength, legendText } from './Icon'
 
 export interface KeyboardViewProps {
   kb: KeyboardDef
@@ -110,7 +111,7 @@ function KeyboardInner(props: KeyboardViewProps) {
         const hold = k.hold && k.hold.type !== 'none' ? actionLabel(k.hold, layout) : ''
         const dt = k.doubleTap ? actionLabel(k.doubleTap, layout) : ''
         const th = k.tapHold ? actionLabel(k.tapHold, layout) : ''
-        const len = [...main].length
+        const len = legendLength(main)
         const cls = [
           'key',
           selected[0] === i ? 'selected' : selected.includes(i) ? 'multi' : '',
@@ -145,16 +146,16 @@ function KeyboardInner(props: KeyboardViewProps) {
             <div className="key-inner" style={{ ...innerStyle, ...(tiny ? { padding: 0, borderRadius: 3, fontSize: 0 } : {}) }}>
               {tiny ? null : (<>
               <div className="key-top">
-                <span>{shift ?? ''}</span>
-                <span className="key-dt">{dt ? '⋮⋮' + dt : ''}</span>
+                <span>{shift ? <Legend text={shift} /> : ''}</span>
+                <span className="key-dt">{dt ? <>2×<Legend text={dt} /></> : ''}</span>
               </div>
               <div className={`key-main ${isTrans ? 'trans' : ''} ${len > 9 ? 'xlong' : len > 4 ? 'long' : ''}`}>
-                {main}
+                <Legend text={main} />
               </div>
               {(hold || th) && !compact ? (
-                <div className="key-hold" title={[hold && `Hold: ${hold}`, th && `Tap+hold: ${th}`].filter(Boolean).join('\n')}>
-                  {hold}
-                  {th ? ` · ${th}` : ''}
+                <div className="key-hold" title={[hold && `Hold: ${legendText(hold)}`, th && `Tap+hold: ${legendText(th)}`].filter(Boolean).join('\n')}>
+                  <Legend text={hold} />
+                  {th ? <> · <Legend text={th} /></> : ''}
                 </div>
               ) : (
                 <div />

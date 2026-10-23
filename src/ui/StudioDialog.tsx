@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardDef, Layout } from '../model/types'
 import { Modal } from './Modal'
+import { Icon } from './Icon'
 import { toast } from './Toast'
 import { useStore } from '../store/store'
 import { navigate } from '../lib/router'
@@ -118,7 +119,7 @@ export function StudioDialog({ layout, kb, onClose }: { layout: Layout; kb: Keyb
 
   const footer = dev ? (
     <>
-      <span className="small muted" style={{ marginRight: 'auto' }}>{unsaved ? '● Unsaved changes on the keyboard' : ''}</span>
+      <span className="small muted" style={{ marginRight: 'auto' }}>{unsaved ? <><Icon name="dot" /> Unsaved changes on the keyboard</> : ''}</span>
       <button disabled={!!busy || !unsaved} onClick={discard}>Discard</button>
       <button className="primary" disabled={!!busy || !unsaved} onClick={save}>Save to keyboard</button>
     </>
@@ -136,7 +137,7 @@ export function StudioDialog({ layout, kb, onClose }: { layout: Layout; kb: Keyb
         <>
           <div className="row wrap">
             <span>Connected to <b>{dev.info.name}</b> <span className="badge">{dev.transport === 'usb' ? 'USB' : 'Bluetooth'}</span></span>
-            <span className={`badge ${unlocked ? '' : 'warn'}`}>{unlocked ? '🔓 Unlocked' : '🔒 Locked'}</span>
+            <span className={`badge ${unlocked ? '' : 'warn'}`}>{unlocked ? <><Icon name="unlock" /> Unlocked</> : <><Icon name="lock" /> Locked</>}</span>
             <span className="spacer" />
             <button className="small ghost" onClick={() => dev.disconnect()}>Disconnect</button>
           </div>
@@ -167,7 +168,7 @@ export function StudioDialog({ layout, kb, onClose }: { layout: Layout; kb: Keyb
           )}
         </>
       )}
-      {busy && <div className="muted small">⏳ {busy}</div>}
+      {busy && <div className="muted small"><Icon name="spinner" /> {busy}</div>}
       {error && <div className="error small" style={{ whiteSpace: 'pre-wrap' }}>{error}</div>}
     </Modal>
   )
@@ -332,7 +333,7 @@ function WritePanel(props: {
             <li><b>{plan.changes.length}</b> key{plan.changes.length === 1 ? '' : 's'} to change, {plan.unchanged} already match</li>
             {plan.addLayers > 0 && <li>{plan.addLayers} layer(s) to add</li>}
             {plan.removeLayers.length > 0 && <li>{plan.removeLayers.length} layer(s) to remove from the keyboard</li>}
-            {plan.renames.length > 0 && <li>Rename: {plan.renames.map((r) => `layer ${r.layer} → “${r.name}”`).join(', ')}</li>}
+            {plan.renames.length > 0 && <li>Rename: {plan.renames.map((r) => `layer ${r.layer} to “${r.name}”`).join(', ')}</li>}
           </ul>
           {plan.errors.map((e, i) => <div key={i} className="error small">{e}</div>)}
           {plan.skipped.length > 0 && (

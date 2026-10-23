@@ -8,6 +8,7 @@ import { ReadKeyboardDialog } from '../ui/ReadKeyboardDialog'
 import { isLayout, cloneAsNew } from '../lib/share'
 import { toast } from '../ui/Toast'
 import { ThemeToggle } from '../ui/ThemeToggle'
+import { Icon } from '../ui/Icon'
 
 export function Home() {
   const layouts = useStore((s) => s.layouts)
@@ -47,7 +48,7 @@ export function Home() {
         <a className="brand" href="#/"><span className="brand-logo">Z</span> ZMK Configurator</a>
         <span className="spacer" />
         <ThemeToggle />
-        <a className="btn ghost" href="https://zmk.dev/docs" target="_blank" rel="noreferrer">ZMK docs ↗</a>
+        <a className="btn ghost" href="https://zmk.dev/docs" target="_blank" rel="noreferrer">ZMK docs <Icon name="external" /></a>
       </div>
       <div className="page col" style={{ gap: 20 }}>
         <div className="row wrap">

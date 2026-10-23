@@ -3,6 +3,7 @@ import { useStore } from '../store/store'
 import { LOCALES } from '../data/locales'
 import { CONTROLLERS } from '../data/keyboards'
 import { defaultSettings } from '../model/defaults'
+import { Icon } from './Icon'
 
 type NumKey = { [K in keyof Settings]: Settings[K] extends number ? K : never }[keyof Settings]
 type BoolKey = { [K in keyof Settings]: Settings[K] extends boolean ? K : never }[keyof Settings]
@@ -26,7 +27,7 @@ export function SettingsPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef 
       <div className="row">
         <input type="number" value={s[k]} min={0} style={{ width: 110 }} onChange={(e) => set(k, Number(e.target.value))} />
         <span className="small muted">{unit}</span>
-        {s[k] !== def[k] && <button className="small ghost" onClick={() => set(k, def[k])} title={`Reset to ${def[k]}`}>↺</button>}
+        {s[k] !== def[k] && <button className="small ghost" onClick={() => set(k, def[k])} title={`Reset to ${def[k]}`}><Icon name="reset" /></button>}
       </div>
       {help && <span className="help">{help}</span>}
     </label>
@@ -153,7 +154,7 @@ export function SettingsPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef 
           <textarea className="mono" rows={4} value={s.extraConf} placeholder="CONFIG_ZMK_..." onChange={(e) => set('extraConf', e.target.value)} />
         </label>
         <label className="field">
-          Extra devicetree (inserted into the keymap's root node — define custom behaviors here and use them with a Custom → Raw binding)
+          Extra devicetree (inserted into the keymap's root node — define custom behaviors here and use them with a Custom, Raw binding)
           <textarea className="mono" rows={6} value={s.extraKeymap} placeholder={'behaviors {\n  ...\n};'} onChange={(e) => set('extraKeymap', e.target.value)} />
         </label>
       </section>

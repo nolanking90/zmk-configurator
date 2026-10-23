@@ -5,6 +5,7 @@ import type { KeyboardDef, Layout } from '../model/types'
 import { KeyboardView } from '../ui/KeyboardView'
 import { findChar } from '../lib/findChar'
 import { WORDS } from '../data/words'
+import { Icon } from '../ui/Icon'
 
 type Lesson = 'home' | 'top' | 'bottom' | 'letters' | 'words' | 'numbers' | 'symbols' | 'custom'
 
@@ -121,7 +122,7 @@ function Trainer({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
   return (
     <>
       <div className="topbar">
-        <a className="btn ghost" href={`#/layout/${layout.id}`}>← Back to editor</a>
+        <a className="btn ghost" href={`#/layout/${layout.id}`}><Icon name="left" /> Back to editor</a>
         <h2 style={{ marginLeft: 8 }}>Train: {layout.name}</h2>
         <span className="spacer" />
         <select value={lesson} onChange={(e) => { const l = e.target.value as Lesson; setLesson(l); reset(l) }}>
@@ -136,7 +137,7 @@ function Trainer({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
         <div ref={boxRef} tabIndex={0} className="card mono" style={{ fontSize: 24, lineHeight: 1.6, letterSpacing: '0.02em', outline: 'none', wordBreak: 'break-word' }}>
           <span style={{ color: 'var(--ok)' }}>{text.slice(0, pos)}</span>
           <span style={{ background: wrong ? 'var(--danger)' : 'var(--accent)', color: 'white', borderRadius: 3, padding: '0 1px' }}>
-            {next === ' ' ? '␣' : next ?? ''}
+            {next === ' ' ? '\u00a0' : next ?? ''}
           </span>
           <span className="muted">{text.slice(pos + 1)}</span>
         </div>
@@ -159,7 +160,7 @@ function Trainer({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
           <KeyboardView fit kb={kb} layout={layout} layer={layout.layers[shownLayer]} selected={highlight} highlight={holdKeys} />
         </div>
         {worst.length > 0 && (
-          <div className="small muted">Most missed: {worst.map(([c, n]) => `${c === ' ' ? '␣' : c} ×${n}`).join(' · ')}</div>
+          <div className="small muted">Most missed: {worst.map(([c, n]) => `${c === ' ' ? 'Space' : c} ×${n}`).join(' · ')}</div>
         )}
       </div>
     </>

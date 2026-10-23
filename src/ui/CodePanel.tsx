@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { KeyboardDef, Layout } from '../model/types'
 import { generateConfigRepo, compileKeymap } from '../zmk/compile'
 import { toast } from './Toast'
+import { Icon } from './Icon'
 
 export function CodePanel({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
   const files = useMemo(() => {
@@ -29,7 +30,7 @@ export function CodePanel({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
       </div>
       {warnings.length > 0 && (
         <div className="card warn small">
-          {warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
+          {warnings.map((w, i) => <div key={i}><Icon name="warning" /> {w}</div>)}
         </div>
       )}
       <div className="row wrap" style={{ gap: 4 }}>

@@ -19,6 +19,7 @@ import { EncoderPanel } from '../ui/EncoderPanel'
 import { uid } from '../model/defaults'
 import type { KeyConfig } from '../model/types'
 import { toast } from '../ui/Toast'
+import { Icon } from '../ui/Icon'
 
 export type EditorView = 'keys' | 'combos' | 'macros' | 'settings' | 'overview' | 'revisions' | 'code' | 'info'
 
@@ -168,8 +169,8 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
         />
         <span className="badge">{kb.name}</span>
         <span className="spacer" />
-        <button className="ghost" disabled={!history?.past.length} onClick={() => undo(id)} title="Undo (⌘/Ctrl+Z)">↶</button>
-        <button className="ghost" disabled={!history?.future.length} onClick={() => redo(id)} title="Redo (⌘/Ctrl+Shift+Z)">↷</button>
+        <button className="ghost" disabled={!history?.past.length} onClick={() => undo(id)} title="Undo (Ctrl/Cmd+Z)"><Icon name="undo" /></button>
+        <button className="ghost" disabled={!history?.future.length} onClick={() => redo(id)} title="Redo (Ctrl/Cmd+Shift+Z)"><Icon name="redo" /></button>
         <button onClick={() => setShareOpen(true)}>Share</button>
         <button onClick={() => navigate(`/layout/${id}/train`)}>Train</button>
         <button onClick={() => navigate(`/layout/${id}/print`)}>Print</button>
@@ -181,7 +182,7 @@ export function Editor({ id, view = 'keys' }: { id: string; view?: string }) {
           <LayerList layout={layout} />
           <div className="sidebar-section small muted">
             <div className="sidebar-title">Tips</div>
-            Double-click a layer to rename, drag to reorder. Alt+0…9 jumps to a layer.
+            Double-click a layer to rename, drag to reorder. Alt+0 to Alt+9 jumps to a layer.
           </div>
         </aside>
         <main className="main">

@@ -6,6 +6,7 @@ import { deviceKeyCount, readDevice, snapshotToLayout, type DeviceSnapshot } fro
 import { matchKeyboards } from '../studio/convert'
 import { useStore } from '../store/store'
 import { navigate } from '../lib/router'
+import { Icon } from './Icon'
 
 /** Start page: create a new layout from the keymap on a connected ZMK Studio keyboard. */
 export function ReadKeyboardDialog({ onClose }: { onClose: () => void }) {
@@ -81,7 +82,7 @@ export function ReadKeyboardDialog({ onClose }: { onClose: () => void }) {
           </p>
           <div><button className="primary" onClick={connect} disabled={!!status}>Connect via USB</button></div>
           {locked && <p className="warn">The keyboard is locked. Press its Studio unlock key (&amp;studio_unlock) — reading starts automatically.</p>}
-          {status && <p className="muted">⏳ {status}</p>}
+          {status && <p className="muted"><Icon name="spinner" /> {status}</p>}
         </>
       ) : (
         <>
@@ -92,7 +93,7 @@ export function ReadKeyboardDialog({ onClose }: { onClose: () => void }) {
             Keyboard
             <select value={kbId} onChange={(e) => setKbId(e.target.value)}>
               {candidates.map((id) => { const k = getKeyboard(id)!; return <option key={id} value={id}>{k.name} ({k.keys.length} keys)</option> })}
-              <option disabled>──────────</option>
+              <option disabled>Other keyboards</option>
               {KEYBOARDS.filter((k) => !candidates.includes(k.id)).map((k) => <option key={k.id} value={k.id}>{k.name} ({k.keys.length} keys)</option>)}
             </select>
             <span className="help">Best match first, based on the keyboard’s name and physical layout.</span>

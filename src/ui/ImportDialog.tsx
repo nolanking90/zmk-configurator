@@ -6,6 +6,7 @@ import { useStore } from '../store/store'
 import { navigate } from '../lib/router'
 import { cloneAsNew, decodeLayout, isLayout } from '../lib/share'
 import { defaultSettings } from '../model/defaults'
+import { Icon } from './Icon'
 
 /** guess the keyboard from a filename like "corne.keymap" or the number of bindings */
 function guessKeyboard(fileName: string, text: string): string {
@@ -112,7 +113,7 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       {warnings.length > 0 && (
         <div className="card warn small" style={{ maxHeight: 180, overflowY: 'auto' }}>
           <b>Imported with {warnings.length} warning(s):</b>
-          {warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}
+          {warnings.map((w, i) => <div key={i}><Icon name="warning" /> {w}</div>)}
         </div>
       )}
       {error && <div className="error">{error}</div>}

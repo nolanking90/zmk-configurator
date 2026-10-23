@@ -6,6 +6,7 @@ import { Modal } from './Modal'
 import { useStore } from '../store/store'
 import { GitHub, getSavedRepo, getToken, setSavedRepo, setToken, type WorkflowRun } from '../lib/github'
 import { downloadBlob, downloadText, slug } from '../lib/download'
+import { Icon } from './Icon'
 
 type Tab = 'build' | 'download'
 
@@ -31,7 +32,7 @@ export function ExportDialog({ layout, kb, onClose }: { layout: Layout; kb: Keyb
       ) : (
         <>
           {compiled.warnings.length > 0 && (
-            <div className="card warn small">{compiled.warnings.map((w, i) => <div key={i}>⚠ {w}</div>)}</div>
+            <div className="card warn small">{compiled.warnings.map((w, i) => <div key={i}><Icon name="warning" /> {w}</div>)}</div>
           )}
           {tab === 'download' ? (
             <DownloadTab layout={layout} kb={kb} files={compiled.files} keymap={compiled.keymap} conf={compiled.conf} onDone={() => createRevision(layout.id, 'Downloaded source')} />
@@ -146,7 +147,7 @@ function BuildTab({ layout, files, onPushed }: { layout: Layout; kb: KeyboardDef
       if (r.conclusion !== 'success') {
         setPhase('failed')
         const jobs = await gh.jobs(full, r.id).catch(() => [])
-        for (const j of jobs.filter((j) => j.conclusion === 'failure')) say(`✗ ${j.name}`)
+        for (const j of jobs.filter((j) => j.conclusion === 'failure')) say(`Failed: ${j.name}`)
         throw new Error(`Build ${r.conclusion}. Open the run on GitHub for the log.`)
       }
       const arts = await gh.artifacts(full, r.id)
@@ -179,7 +180,7 @@ function BuildTab({ layout, files, onPushed }: { layout: Layout; kb: KeyboardDef
         <ol className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
           <li>
             Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">fine-grained token</a> with
-            Repository access → your config repo (or “All repositories” to let this tool create one), and permissions <b>Contents</b>,{' '}
+            Repository access: your config repo (or “All repositories” to let this tool create one), and permissions <b>Contents</b>,{' '}
             <b>Workflows</b>, <b>Actions</b>: Read and write (<b>Administration</b>: write to create repos). Or a{' '}
             <a href="https://github.com/settings/tokens/new?scopes=repo,workflow&description=ZMK%20Configurator" target="_blank" rel="noreferrer">classic token</a> with <code>repo</code> and <code>workflow</code>.
           </li>
@@ -227,9 +228,9 @@ function BuildTab({ layout, files, onPushed }: { layout: Layout; kb: KeyboardDef
       {(log.length > 0 || error) && (
         <div className="card col small" style={{ gap: 4 }}>
           {log.map((l, i) => <div key={i}>{l}</div>)}
-          {busy && <div className="muted">⏳ {phase === 'building' ? `Building (${run?.status})…` : 'Working…'}</div>}
+          {busy && <div className="muted"><Icon name="spinner" /> {phase === 'building' ? `Building (${run?.status})…` : 'Working…'}</div>}
           {error && <div className="error">{error}</div>}
-          {run && <a href={run.html_url} target="_blank" rel="noreferrer">Open the run on GitHub ↗</a>}
+          {run && <a href={run.html_url} target="_blank" rel="noreferrer">Open the run on GitHub <Icon name="external" /></a>}
         </div>
       )}
       {phase === 'done' && (
@@ -237,7 +238,7 @@ function BuildTab({ layout, files, onPushed }: { layout: Layout; kb: KeyboardDef
           <h3>Firmware ready</h3>
           {artifacts.map((a) => (
             <div key={a.id} className="row">
-              <button className="primary" onClick={() => download(a)}>⬇ {a.name}.zip</button>
+              <button className="primary" onClick={() => download(a)}><Icon name="download" /> {a.name}.zip</button>
               <span className="muted small">{(a.size_in_bytes / 1024).toFixed(0)} KB</span>
             </div>
           ))}

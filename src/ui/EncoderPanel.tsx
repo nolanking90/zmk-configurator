@@ -4,6 +4,7 @@ import { useStore } from '../store/store'
 import { actionLabel } from '../lib/labels'
 import { Modal } from './Modal'
 import { ActionPicker } from './ActionPicker'
+import { Icon, Legend } from './Icon'
 
 /** rotary encoder bindings for the current layer */
 export function EncoderPanel({ layout, kb, layerIndex }: { layout: Layout; kb: KeyboardDef; layerIndex: number }) {
@@ -12,7 +13,7 @@ export function EncoderPanel({ layout, kb, layerIndex }: { layout: Layout; kb: K
   const n = kb.encoders ?? 0
   if (!n) return null
   const layer = layout.layers[layerIndex]
-  const label = (a?: Action) => (a ? actionLabel(a, layout) || '∅' : '▽')
+  const label = (a?: Action) => <Legend text={a ? actionLabel(a, layout) || '{none}' : '{trans}'} />
   const cur = editing ? layer.encoders?.[editing.enc]?.[editing.dir] : undefined
   return (
     <div className="panel">
@@ -24,8 +25,8 @@ export function EncoderPanel({ layout, kb, layerIndex }: { layout: Layout; kb: K
         {Array.from({ length: n }, (_, i) => (
           <div key={i} className="row">
             <span className="small muted">{n === 2 ? (i === 0 ? 'Left' : 'Right') : `Encoder ${i + 1}`}</span>
-            <button title="Counter-clockwise" onClick={() => setEditing({ enc: i, dir: 'ccw' })}>⟲ {label(layer.encoders?.[i]?.ccw)}</button>
-            <button title="Clockwise" onClick={() => setEditing({ enc: i, dir: 'cw' })}>⟳ {label(layer.encoders?.[i]?.cw)}</button>
+            <button title="Counter-clockwise" onClick={() => setEditing({ enc: i, dir: 'ccw' })}><Icon name="ccw" /> {label(layer.encoders?.[i]?.ccw)}</button>
+            <button title="Clockwise" onClick={() => setEditing({ enc: i, dir: 'cw' })}><Icon name="cw" /> {label(layer.encoders?.[i]?.cw)}</button>
           </div>
         ))}
       </div>

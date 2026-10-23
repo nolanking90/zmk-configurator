@@ -5,6 +5,7 @@ import { uid } from '../model/defaults'
 import { KeyboardView } from './KeyboardView'
 import { ActionPicker } from './ActionPicker'
 import { actionDescription, actionLabel } from '../lib/labels'
+import { Legend } from './Icon'
 
 export function CombosPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef }) {
   const update = useStore((s) => s.update)
@@ -45,7 +46,7 @@ export function CombosPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef })
               <div className="grow">
                 <div>{c.name}</div>
                 <div className="small muted">
-                  {c.keys.length} keys → {actionLabel(c.action, layout) || actionDescription(c.action, layout)}
+                  {c.keys.length} keys: {actionLabel(c.action, layout) ? <Legend text={actionLabel(c.action, layout)} /> : actionDescription(c.action, layout)}
                 </div>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { actionLabel } from '../lib/labels'
 import { domCodeToZmk } from '../lib/domcodes'
 import { canonicalCode, isModifierCode } from '../data/keycodes'
 import { Modal } from './Modal'
+import { Icon, Legend } from './Icon'
 
 const STEP_NAMES: Record<MacroStep['type'], string> = {
   text: 'Type text',
@@ -113,9 +114,9 @@ export function MacrosPanel({ layout }: { layout: Layout }) {
               <input value={macro.name} onChange={(e) => edit((m) => { m.name = e.target.value }, 'macro-name')} style={{ fontWeight: 600 }} />
               <span className="spacer" />
               {recording ? (
-                <button className="active" onClick={stopRecording}>■ Stop recording</button>
+                <button className="active" onClick={stopRecording}><Icon name="stop" /> Stop recording</button>
               ) : (
-                <button onClick={() => setRecording(true)} title="Record keystrokes from your keyboard">● Record</button>
+                <button onClick={() => setRecording(true)} title="Record keystrokes from your keyboard"><Icon name="record" /> Record</button>
               )}
               <button className="small danger" onClick={() => { update(layout.id, (d) => { d.macros.splice(mi, 1) }); setCur(null) }}>Delete</button>
             </div>
@@ -135,13 +136,13 @@ export function MacrosPanel({ layout }: { layout: Layout }) {
                   )}
                   {(s.type === 'tap' || s.type === 'press' || s.type === 'release') && (
                     <button className="grow" style={{ justifyContent: 'flex-start' }} onClick={() => setPicking(i)}>
-                      {actionLabel(s.action, layout) || '(choose)'}
+                      {actionLabel(s.action, layout) ? <Legend text={actionLabel(s.action, layout)} /> : '(choose)'}
                     </button>
                   )}
                   {s.type === 'pauseForRelease' && <span className="grow small muted">Steps after this run when the macro key is released</span>}
-                  <button className="small ghost" disabled={i === 0} onClick={() => edit((m) => { [m.steps[i - 1], m.steps[i]] = [m.steps[i], m.steps[i - 1]] })}>↑</button>
-                  <button className="small ghost" disabled={i === macro.steps.length - 1} onClick={() => edit((m) => { [m.steps[i + 1], m.steps[i]] = [m.steps[i], m.steps[i + 1]] })}>↓</button>
-                  <button className="small ghost danger" onClick={() => edit((m) => { m.steps.splice(i, 1) })}>✕</button>
+                  <button className="small ghost" disabled={i === 0} onClick={() => edit((m) => { [m.steps[i - 1], m.steps[i]] = [m.steps[i], m.steps[i - 1]] })} title="Move up"><Icon name="chevron-up" /></button>
+                  <button className="small ghost" disabled={i === macro.steps.length - 1} onClick={() => edit((m) => { [m.steps[i + 1], m.steps[i]] = [m.steps[i], m.steps[i + 1]] })} title="Move down"><Icon name="chevron-down" /></button>
+                  <button className="small ghost danger" onClick={() => edit((m) => { m.steps.splice(i, 1) })} title="Remove step"><Icon name="x" /></button>
                 </div>
               ))}
               <div className="row wrap" style={{ gap: 4 }}>

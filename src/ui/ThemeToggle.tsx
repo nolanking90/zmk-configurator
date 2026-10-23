@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Icon } from './Icon'
 
 type Theme = 'auto' | 'light' | 'dark'
 const KEY = 'zmkc.theme'
@@ -21,7 +22,7 @@ export function ThemeToggle() {
   const next: Record<Theme, Theme> = { auto: 'light', light: 'dark', dark: 'auto' }
   return (
     <button className="ghost" onClick={() => setT(next[t])} title={`Theme: ${t}`}>
-      {t === 'auto' ? '◐' : t === 'light' ? '☀' : '☾'}
+      <Icon name={t === 'auto' ? 'contrast' : t === 'light' ? 'sun' : 'moon'} />
     </button>
   )
 }

@@ -1,5 +1,5 @@
 import type { Layout } from '../model/types'
-import { actionLabel } from './labels'
+import { actionText as actionLabel } from './labels'
 
 export interface DiffEntry {
   where: string
@@ -9,7 +9,7 @@ export interface DiffEntry {
 
 const keyText = (l: Layout, k: Layout['layers'][number]['keys'][number] | undefined) => {
   if (!k) return '—'
-  const parts = [actionLabel(k.tap, l) || '∅']
+  const parts = [actionLabel(k.tap, l) || 'none']
   if (k.hold) parts.push('hold ' + actionLabel(k.hold, l))
   if (k.doubleTap) parts.push('2× ' + actionLabel(k.doubleTap, l))
   if (k.tapHold) parts.push('tap-hold ' + actionLabel(k.tapHold, l))
