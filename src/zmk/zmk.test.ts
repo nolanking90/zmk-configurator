@@ -124,6 +124,16 @@ describe('compileKeymap', () => {
     expect(layer[0].indexOf('&kp Y')).toBe(layer[1].indexOf('&kp H'))
   })
 
+  it('mouse key tuning: speed #defines before includes, &mmv/&msc overrides', () => {
+    expect(km).toMatch(/#define ZMK_POINTING_DEFAULT_MOVE_VAL 1200\n#define ZMK_POINTING_DEFAULT_SCRL_VAL 20\n\n#include <behaviors.dtsi>/)
+    expect(km).toContain('&mmv {\n    acceleration-exponent = <2>;\n};')
+    expect(km).toContain('&msc {\n    time-to-max-speed-ms = <100>;\n};')
+    const plain = compileKeymap(newLayout('corne', 42), corne).keymap
+    expect(plain).not.toContain('ZMK_POINTING_DEFAULT')
+    const { layout } = importKeymap(stripMeta(km), corne)
+    expect(layout.settings).toMatchObject({ mouseMoveSpeed: 1200, mouseScrollSpeed: 20, mouseTimeToMax: 300, mouseAccelExponent: 2, mouseScrollTimeToMax: 100, mouseScrollAccelExponent: 0 })
+  })
+
   it('embeds metadata', () => {
     expect(km).toMatch(/\/\* zmk-configurator:[A-Za-z0-9+/=]+ \*\/\n$/)
   })

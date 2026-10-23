@@ -121,6 +121,13 @@ class Importer {
       resolveInclude: (path, system) => this.include(path, system),
     })
     const src = pp.run(this.text)
+    const speed = (name: string) => {
+      const v = pp.macros.get(name)
+      const n = v ? Number(v.body.map((t) => t.v).join('').trim()) : NaN
+      return Number.isFinite(n) ? n : undefined
+    }
+    this.settings.mouseMoveSpeed = speed('ZMK_POINTING_DEFAULT_MOVE_VAL') ?? 600
+    this.settings.mouseScrollSpeed = speed('ZMK_POINTING_DEFAULT_SCRL_VAL') ?? 10
     this.tree = parseDts(src)
     for (const w of this.tree.warnings) this.warn(w)
     this.labels = this.tree.labels
@@ -213,6 +220,12 @@ class Importer {
     const sk = this.override('sk')
     s.stickyKeyTimeout = (sk && propInt(sk, 'release-after-ms')) ?? 1000
     s.stickyQuickRelease = !!sk?.props.has('quick-release')
+    const mmv = this.override('mmv')
+    const msc = this.override('msc')
+    s.mouseTimeToMax = (mmv && propInt(mmv, 'time-to-max-speed-ms')) ?? 300
+    s.mouseAccelExponent = (mmv && propInt(mmv, 'acceleration-exponent')) ?? 1
+    s.mouseScrollTimeToMax = (msc && propInt(msc, 'time-to-max-speed-ms')) ?? 300
+    s.mouseScrollAccelExponent = (msc && propInt(msc, 'acceleration-exponent')) ?? 0
     const td = findNodes(this.tree.root, (n) => compatible(n) === TAP_DANCE)[0]
     if (td) s.tapDanceTerm = propInt(td, 'tapping-term-ms') ?? 200
     s.positionalHoldTap = findNodes(this.tree.root, (n) => compatible(n) === HOLD_TAP && n.props.has('hold-trigger-key-positions')).length > 0
@@ -223,6 +236,7 @@ class Importer {
         ? ['flavor', 'tapping-term-ms', 'quick-tap-ms', 'require-prior-idle-ms', 'hold-trigger-on-release', 'hold-while-undecided']
         : label === 'sk' ? ['release-after-ms', 'quick-release']
           : label === 'trans' ? ['#sensor-binding-cells'] // emitted by the compiler when needed
+            : label === 'mmv' || label === 'msc' ? ['time-to-max-speed-ms', 'acceleration-exponent']
           : label === 'sl' && propInt(n, 'release-after-ms') === s.stickyKeyTimeout ? ['release-after-ms'] : [])
       if (label === 'lt' && this.override('mt')) {
         const m = this.override('mt')!

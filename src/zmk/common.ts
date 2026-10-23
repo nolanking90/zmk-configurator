@@ -88,7 +88,7 @@ export const BUILTIN_CELLS: Record<string, number> = {
 export const BUILTIN_NODE_NAMES: Record<string, string> = {
   bl: 'bcklight', bootloader: 'bootload', bt: 'bluetooth', caps_word: 'caps_word', ext_power: 'extpower',
   gresc: 'grave_escape', key_repeat: 'key_repeat', kp: 'key_press', kt: 'key_toggle', lt: 'layer_tap',
-  mkp: 'mouse_key_press', mo: 'momentary_layer', mt: 'mod_tap', none: 'none', out: 'outputs',
+  mkp: 'mouse_key_press', mmv: 'mouse_move', msc: 'mouse_scroll', mo: 'momentary_layer', mt: 'mod_tap', none: 'none', out: 'outputs',
   rgb_ug: 'rgb_ug', sk: 'sticky_key', sl: 'sticky_layer', soft_off: 'z_so_off', studio_unlock: 'studio_unlock',
   sys_reset: 'sysreset', tog: 'toggle_layer', to: 'to_layer', trans: 'transparent',
 }

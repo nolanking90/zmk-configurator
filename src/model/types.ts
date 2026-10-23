@@ -123,6 +123,18 @@ export interface Settings {
   display: boolean
   studio: boolean
   pointing: boolean
+  /** mouse keys: max pointer speed (ZMK_POINTING_DEFAULT_MOVE_VAL), default 600 */
+  mouseMoveSpeed: number
+  /** mouse keys: scroll speed (ZMK_POINTING_DEFAULT_SCRL_VAL), default 10 */
+  mouseScrollSpeed: number
+  /** &mmv time-to-max-speed-ms, default 300 */
+  mouseTimeToMax: number
+  /** &mmv acceleration-exponent, default 1 (0 = constant speed) */
+  mouseAccelExponent: number
+  /** &msc time-to-max-speed-ms, default 300 */
+  mouseScrollTimeToMax: number
+  /** &msc acceleration-exponent, default 0 */
+  mouseScrollAccelExponent: number
   nkro: boolean
   bleTxPowerPlus8: boolean
   btMaxConnections: number

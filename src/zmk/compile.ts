@@ -31,6 +31,11 @@ const ZMK = {
   btMaxConn: 5,
   debounceMs: 5,
   stickyReleaseMs: 1000,
+  mouseMoveSpeed: 600,
+  mouseScrollSpeed: 10,
+  /** app/dts/behaviors/mouse_move.dtsi / mouse_scroll.dtsi */
+  mmv: { time: 300, exp: 1 },
+  msc: { time: 300, exp: 0 },
 }
 
 const I1 = '    '
@@ -689,6 +694,11 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
   out.push(' * file is imported again, but regenerating it overwrites them.')
   out.push(' */')
   out.push('')
+  // mouse speeds: pointing.h only defines these #ifndef, so they must come first
+  const speedDefines: string[] = []
+  if (s.mouseMoveSpeed !== undefined && s.mouseMoveSpeed !== ZMK.mouseMoveSpeed) speedDefines.push(`#define ZMK_POINTING_DEFAULT_MOVE_VAL ${s.mouseMoveSpeed}`)
+  if (s.mouseScrollSpeed !== undefined && s.mouseScrollSpeed !== ZMK.mouseScrollSpeed) speedDefines.push(`#define ZMK_POINTING_DEFAULT_SCRL_VAL ${s.mouseScrollSpeed}`)
+  if (speedDefines.length) out.push(...speedDefines, '')
   out.push(...includes)
   out.push('')
   for (const d of c.layerDefines()) out.push(`#define ${d.name} ${d.index}`)
@@ -702,6 +712,17 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
     if (s.stickyKeyTimeout !== ZMK.stickyReleaseMs) p.push(`release-after-ms = <${s.stickyKeyTimeout}>;`)
     if (s.stickyQuickRelease) p.push('quick-release;')
     if (p.length) overrides.push(`&sk {\n${p.map((x) => I1 + x).join('\n')}\n};`)
+  }
+  for (const [label, time, exp] of [
+    ['mmv', s.mouseTimeToMax, s.mouseAccelExponent],
+    ['msc', s.mouseScrollTimeToMax, s.mouseScrollAccelExponent],
+  ] as const) {
+    if (!c.refs.has(label)) continue
+    const d = ZMK[label]
+    const p: string[] = []
+    if (time !== undefined && time !== d.time) p.push(`time-to-max-speed-ms = <${time}>;`)
+    if (exp !== undefined && exp !== d.exp) p.push(`acceleration-exponent = <${exp}>;`)
+    if (p.length) overrides.push(`&${label} {\n${p.map((x) => I1 + x).join('\n')}\n};`)
   }
   if (c.sensorTrans) {
     // &trans has no #sensor-binding-cells, so devicetree rejects it in sensor-bindings.

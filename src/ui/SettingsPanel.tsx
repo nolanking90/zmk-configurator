@@ -109,6 +109,16 @@ export function SettingsPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef 
           {bool('pointing', 'Mouse keys', 'Enables mouse movement, scrolling and clicks.')}
           {bool('usbLogging', 'USB logging', 'Debug output over USB serial. Uses more power.')}
         </div>
+        {(
+          <div className="settings-grid">
+            {num('mouseMoveSpeed', 'Mouse speed', 'Maximum pointer speed of mouse-move keys.', '')}
+            {num('mouseTimeToMax', 'Mouse time to max', 'Time for the pointer to accelerate to full speed.')}
+            {num('mouseAccelExponent', 'Mouse acceleration', 'Acceleration curve exponent (0 = constant speed, 1 = linear, 2 = quadratic).', '')}
+            {num('mouseScrollSpeed', 'Scroll speed', 'Maximum speed of scroll keys.', '')}
+            {num('mouseScrollTimeToMax', 'Scroll time to max', 'Time for scrolling to reach full speed.')}
+            {num('mouseScrollAccelExponent', 'Scroll acceleration', 'Scroll acceleration exponent (0 = constant).', '')}
+          </div>
+        )}
       </section>
 
       <section className="card col">
