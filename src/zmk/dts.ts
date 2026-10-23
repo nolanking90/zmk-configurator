@@ -171,7 +171,9 @@ class Parser {
         continue
       }
       this.warn(`Could not parse near "${this.excerpt()}"; skipped`)
+      const before = this.i
       this.skipStatement()
+      if (this.i === before) this.i++ // stray closing brace
     }
     return this.tree
   }

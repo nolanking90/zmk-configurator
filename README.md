@@ -13,6 +13,13 @@ A visual keymap editor for [ZMK](https://zmk.dev) keyboards, modeled on the ZSA 
 - Revisions with diff and restore, share links, print view, typing trainer
 - Import existing `.keymap` files; export a complete zmk-config repo, or push to GitHub and build firmware from the browser
 
+## Privacy
+
+There is no backend and no login. Layouts, revisions and settings live in each visitor's own browser
+(IndexedDB/localStorage), so users never see each other's data. The only network calls go to
+`api.github.com`, and only when a user supplies their own token to build firmware in their own repo
+or create a gist. Share links carry the layout inside the URL.
+
 ## Development
 
 ```sh

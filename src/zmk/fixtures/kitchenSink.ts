@@ -28,7 +28,7 @@ export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb
     { tap: k('ESC'), hold: { type: 'layer', mode: 'mo', layer: 'l-nav' } },
     { tap: k('SPACE'), hold: { type: 'layer', mode: 'tog', layer: 'l-nav' } },
     { tap: k('BSPC'), hold: k('LCTRL'), doubleTap: k('DEL'), tapHold: { type: 'layer', mode: 'mo', layer: 'l-sys' } },
-    { tap: k('ENTER'), hold: { type: 'behavior', behavior: 'caps_word', params: [] } },
+    { tap: k('RET'), hold: { type: 'behavior', behavior: 'caps_word', params: [] } },
     { tap: k('TAB'), hold: { type: 'behavior', behavior: 'bt', params: ['BT_CLR'] } },
   ]
   const nav: KeyConfig[] = Array.from({ length: 42 }, () => trans)

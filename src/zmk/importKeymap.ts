@@ -287,6 +287,7 @@ class Importer {
 
   /** our own hold-tap wrapper: press X / pause-for-release / release X */
   wrappedBinding(n: DtNode): Binding | undefined {
+    if (!n.labels[0]?.startsWith('w_')) return undefined
     const bs = splitBindings(propCells(n, 'bindings') ?? [])
     if (bs.length !== 5) return undefined
     const [p, x, pause, r, y] = bs

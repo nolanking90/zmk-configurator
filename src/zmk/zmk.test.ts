@@ -65,7 +65,7 @@ describe('compileKeymap', () => {
 
   it('synthesizes hold-taps for non-kp holds', () => {
     expect(km).toContain('&ht_tog_kp NAV_MOUSE SPACE')
-    expect(km).toContain('&ht_caps_word_kp 0 ENTER')
+    expect(km).toContain('&ht_caps_word_kp 0 RET')
     expect(km).toContain('bindings = <&caps_word>, <&kp>;')
     expect(km).toContain('&ht_mkp_kp MCLK LC(C)')
     expect(km).toContain('&ht_kp_sk_l LALT LCTRL')

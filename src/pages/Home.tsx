@@ -97,7 +97,7 @@ export function Home() {
           </div>
         )}
         <div className="row small muted" style={{ gap: 12 }}>
-          <span>Layouts live in this browser’s storage.</span>
+          <span>Your layouts are stored only in this browser — no account, nothing uploaded. Back them up to move to another device.</span>
           <button className="small" onClick={backup} disabled={!list.length}>Back up all</button>
           <button className="small" onClick={() => restoreRef.current?.click()}>Restore backup</button>
           <input ref={restoreRef} type="file" accept=".json" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = '' }} />
