@@ -463,6 +463,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -794,6 +795,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -1109,6 +1111,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -1406,6 +1409,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -1674,6 +1678,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -1971,6 +1976,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -2239,6 +2245,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -4310,6 +4317,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -4635,6 +4643,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -4876,6 +4885,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -5088,6 +5098,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -5419,6 +5430,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -5734,6 +5746,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -6602,6 +6615,7 @@
    "planck_rev6"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -6857,6 +6871,7 @@
    "bt60_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -7182,6 +7197,7 @@
    "bt60_v1_hs"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -7507,6 +7523,7 @@
    "bt60_v2"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -10804,6 +10821,7 @@
    "bt60_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -11140,6 +11158,7 @@
    "bt60_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -11471,6 +11490,7 @@
    "bt60_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -11812,6 +11832,7 @@
    "bt60_v2"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -12166,6 +12187,7 @@
    "bt60_v2"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -12494,6 +12516,7 @@
    "bt60_v2"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -12835,6 +12858,7 @@
    "bt65_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -13201,6 +13225,7 @@
    "bt65_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -13580,6 +13605,7 @@
    "bt65_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -13933,6 +13959,7 @@
    "bt65_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -14305,6 +14332,7 @@
    "bt75_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -14751,6 +14779,7 @@
    "bt75_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -15210,6 +15239,7 @@
    "bt75_v1"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -16528,6 +16558,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -21297,6 +21328,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -21439,6 +21471,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -21746,6 +21779,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -22053,6 +22087,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -22605,6 +22640,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 2,
   "keys": [
    {
     "x": 1,
@@ -22771,6 +22807,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 2,
   "keys": [
    {
     "x": 1,
@@ -22926,6 +22963,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 2,
   "keys": [
    {
     "x": 1,
@@ -23397,6 +23435,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 1,
@@ -24033,6 +24072,7 @@
    "planck_rev6"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -24285,6 +24325,7 @@
    "planck_rev6"
   ],
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -26986,6 +27027,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -27384,6 +27426,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -27691,6 +27734,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 1,
@@ -28168,6 +28212,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,
@@ -29072,6 +29117,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": false,
+  "encoders": 1,
   "keys": [
    {
     "x": 0,
@@ -29184,6 +29230,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 4,
   "keys": [
    {
     "x": 0,
@@ -29401,6 +29448,7 @@
   ],
   "defaultController": "nice_nano_v2",
   "split": true,
+  "encoders": 2,
   "keys": [
    {
     "x": 0,

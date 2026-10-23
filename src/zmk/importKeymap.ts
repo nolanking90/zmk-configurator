@@ -5,7 +5,7 @@
 // C preprocessor (incl. zmk-helpers macros) -> devicetree -> Oryx-style keys.
 import LZString from 'lz-string'
 import type {
-  Action, Combo, KeyConfig, KeyboardDef, Layer, Layout, Macro, MacroStep, Mod, Settings, HoldTapFlavor,
+  Action, Combo, EncoderConfig, KeyConfig, KeyboardDef, Layer, Layout, Macro, MacroStep, Mod, Settings, HoldTapFlavor,
 } from '../model/types'
 import { defaultSettings, uid } from '../model/defaults'
 import { canonicalCode, charToKey, findKeycode } from '../data/keycodes'
@@ -98,6 +98,8 @@ class Importer {
   keep = new Set<string>()
   /** builtin overrides we could not map to settings */
   builtinOverrides: DtNode[] = []
+  /** `&label { ... };` overrides of nodes we do not know (hoisted to top level by the compiler) */
+  labelOverrides: string[] = []
   textChars = new Map<string, string>()
   readonly text: string
   readonly kb: KeyboardDef
@@ -198,6 +200,7 @@ class Importer {
       s.quickTap = Math.max(0, propInt(mt, 'quick-tap-ms') ?? 0)
       s.requirePriorIdle = Math.max(0, propInt(mt, 'require-prior-idle-ms') ?? 0)
       s.holdTriggerOnRelease = mt.props.has('hold-trigger-on-release')
+      s.holdWhileUndecided = mt.props.has('hold-while-undecided')
     } else {
       // ZMK's stock &mt
       s.holdTapFlavor = 'hold-preferred'
@@ -205,6 +208,7 @@ class Importer {
       s.quickTap = 0
       s.requirePriorIdle = 0
       s.holdTriggerOnRelease = false
+      s.holdWhileUndecided = false
     }
     const sk = this.override('sk')
     s.stickyKeyTimeout = (sk && propInt(sk, 'release-after-ms')) ?? 1000
@@ -216,8 +220,9 @@ class Importer {
     // other overrides of builtin behaviors are kept as devicetree
     for (const [label, n] of this.tree.externalOverrides) {
       const handled = new Set(label === 'mt' || label === 'lt'
-        ? ['flavor', 'tapping-term-ms', 'quick-tap-ms', 'require-prior-idle-ms', 'hold-trigger-on-release']
+        ? ['flavor', 'tapping-term-ms', 'quick-tap-ms', 'require-prior-idle-ms', 'hold-trigger-on-release', 'hold-while-undecided']
         : label === 'sk' ? ['release-after-ms', 'quick-release']
+          : label === 'trans' ? ['#sensor-binding-cells'] // emitted by the compiler when needed
           : label === 'sl' && propInt(n, 'release-after-ms') === s.stickyKeyTimeout ? ['release-after-ms'] : [])
       if (label === 'lt' && this.override('mt')) {
         const m = this.override('mt')!
@@ -227,7 +232,8 @@ class Importer {
       if (!rest.length && !n.children.length) continue
       const nodeName = BUILTIN_NODE_NAMES[label]
       if (!nodeName) {
-        this.warn(`Override of unknown behavior &${label} dropped`)
+        // hardware nodes (e.g. `&left_encoder { status = "okay"; }`): kept as a top-level override
+        this.labelOverrides.push(writeNode({ ...n, name: `&${label}`, labels: [] }, '', false))
         continue
       }
       const copy: DtNode = { name: nodeName, labels: [], props: new Map(rest.map((k) => [k, n.props.get(k)!])), children: n.children }
@@ -385,7 +391,11 @@ class Importer {
     if (n && compat === HOLD_TAP && p.length === 2) {
       const subs = splitBindings(propCells(n, 'bindings') ?? [])
       if (subs.length === 2 && subs.every((s) => !s.params.length)) {
-        const k: KeyConfig = { tap: this.sub(subs[1].ref, p[1]), hold: this.sub(subs[0].ref, p[0]) }
+        const mm = this.modMorph(subs[1].ref)
+        const k: KeyConfig = mm
+          ? { tap: mm.tap, shifted: mm.shifted, hold: this.sub(subs[0].ref, p[0]) }
+          : { tap: this.sub(subs[1].ref, p[1]), hold: this.sub(subs[0].ref, p[0]) }
+        if (n.props.has('retro-tap')) k.retroTap = true
         const term = propInt(n, 'tapping-term-ms')
         if (term !== undefined && term !== this.settings.tappingTerm) k.tappingTerm = term
         return k
@@ -397,11 +407,15 @@ class Importer {
       if (subs.length === 2) {
         const first = this.key(subs[0])
         const second = this.key(subs[1])
-        if (!first.doubleTap && !first.tapHold && !second.doubleTap && !second.tapHold) {
+        const sameTap = eq(second.tap, first.tap) && eq(second.shifted, first.shifted)
+        if (!first.doubleTap && !first.tapHold && !second.doubleTap && !second.tapHold && (!second.shifted || sameTap) &&
+          eq(first.retroTap, second.hold ? second.retroTap : first.retroTap)) {
           const k: KeyConfig = { tap: first.tap }
+          if (first.shifted) k.shifted = first.shifted
           if (first.hold) k.hold = first.hold
           if (second.hold) k.tapHold = second.hold
-          if (!(second.hold && eq(second.tap, first.tap))) k.doubleTap = second.tap
+          if (first.retroTap || second.retroTap) k.retroTap = true
+          if (!(second.hold && sameTap)) k.doubleTap = second.tap
           const term = first.tappingTerm ?? second.tappingTerm
           if (term !== undefined) k.tappingTerm = term
           return k
@@ -410,18 +424,75 @@ class Importer {
       if (subs.length > 2) this.warn(`Tap dance &${r} has ${subs.length} bindings; only 2 are supported, kept as raw`)
       return { tap: this.raw(b) }
     }
+    if (!p.length) {
+      const mm = this.modMorph(r)
+      if (mm) return mm
+    }
     return { tap: this.action(b) }
+  }
+
+  /** A shift mod-morph of two simple bindings -> tap / shifted. */
+  modMorph(ref: string): { tap: Action; shifted: Action } | undefined {
+    const n = this.node(ref)
+    if (!n || compatible(n) !== 'zmk,behavior-mod-morph' || n.props.has('keep-mods')) return undefined
+    const mods = (propCells(n, 'mods') ?? []).join('').replace(/[()\s]/g, '').split('|').sort().join('|')
+    if (mods !== 'MOD_LSFT|MOD_RSFT') return undefined
+    const bs = splitBindings(propCells(n, 'bindings') ?? [])
+    if (bs.length !== 2) return undefined
+    const tap = this.action(bs[0])
+    const shifted = this.action(bs[1])
+    if (tap.type === 'raw' || shifted.type === 'raw') return undefined
+    return { tap, shifted }
+  }
+
+  /** sensor-bindings -> one EncoderConfig per encoder */
+  encoders(n: DtNode, layerName: string): EncoderConfig[] | undefined {
+    const cells = propCells(n, 'sensor-bindings')
+    if (!cells) return undefined
+    const out: EncoderConfig[] = []
+    for (const b of splitBindings(cells)) {
+      if (b.ref === 'trans' && !b.params.length) {
+        out.push({})
+        continue
+      }
+      const node = this.node(b.ref)
+      const compat = node && compatible(node)
+      if ((b.ref === 'inc_dec_kp' || b.ref === 'inc_dec_cp') && b.params.length === 2) {
+        out.push({ cw: this.action({ ref: 'kp', params: [b.params[0]] }), ccw: this.action({ ref: 'kp', params: [b.params[1]] }) })
+        continue
+      }
+      if (node && (compat === 'zmk,behavior-sensor-rotate' || compat === 'zmk,behavior-sensor-rotate-var')) {
+        const subs = splitBindings(propCells(node, 'bindings') ?? [])
+        if (subs.length === 2) {
+          const variable = compat === 'zmk,behavior-sensor-rotate-var'
+          if (!variable || b.params.length === 2) {
+            const [cw, ccw] = subs.map((sb, i) => this.action(variable ? { ref: sb.ref, params: [b.params[i]] } : sb))
+            out.push({ cw, ccw })
+            continue
+          }
+        }
+      }
+      this.warn(`Layer "${layerName}": encoder binding ${bindingText(b)} is not supported; left transparent`)
+      out.push({})
+    }
+    const n2 = this.kb.encoders ?? 0
+    if (out.length > n2) this.warn(`Layer "${layerName}" has ${out.length} encoder bindings, ${this.kb.name} has ${n2} encoders; extra ones dropped`)
+    out.length = Math.min(out.length, n2)
+    while (out.length && !out[out.length - 1].cw && !out[out.length - 1].ccw) out.pop()
+    return out.length ? out : undefined
   }
 
   // ---- layers -------------------------------------------------------------
 
   layer(n: DtNode, i: number): Layer {
     const name = propString(n, 'display-name') ?? propString(n, 'label') ?? n.labels[0] ?? n.name.replace(/^layer_|_layer$/g, '') ?? `Layer ${i}`
-    if (n.props.has('sensor-bindings')) this.warn(`Layer "${name}": sensor-bindings (encoders) are not supported and were dropped`)
     const bindings = splitBindings(propCells(n, 'bindings') ?? [])
     for (const b of bindings) if (!b.ref) this.warn(`Layer "${name}": unparsable cells ${b.params.join(' ')}`)
     const keys = bindings.filter((b) => b.ref).map((b) => this.key(b))
-    return { id: this.layerIds[i], name: name || n.name, keys }
+    const layer: Layer = { id: this.layerIds[i], name: name || n.name, keys }
+    const enc = this.encoders(n, layer.name)
+    if (enc) layer.encoders = enc
+    return layer
   }
 
   // ---- combos -------------------------------------------------------------
@@ -555,6 +626,7 @@ class Importer {
       this.warn(`Node /${c.name} is not modelled; kept in the extra devicetree`)
     }
     if (this.tree.root.children.some((c) => c.name === 'chosen')) this.warn('/chosen node ignored (the keyboard definition supplies it)')
+    parts.push(...this.labelOverrides)
     return parts.join('\n\n')
   }
 }

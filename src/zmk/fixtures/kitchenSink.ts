@@ -8,10 +8,10 @@ const tap = (a: Action): KeyConfig => ({ tap: a })
 const trans: KeyConfig = { tap: { type: 'trans' } }
 
 /** 42-key (corne-sized) layout; pass a key count to pad / truncate. */
-export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb?: boolean } = {}): Layout {
+export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb?: boolean; encoders?: boolean } = {}): Layout {
   const base: KeyConfig[] = [
     // row 0
-    { tap: k('TAB') }, { tap: k('Q'), hold: k('LALT'), tappingTerm: 250 }, tap(k('W')), tap(k('E')), tap(k('R')), tap(k('T')),
+    { tap: k('TAB') }, { tap: k('Q'), hold: k('LALT'), tappingTerm: 250 }, { tap: k('W'), shifted: k('N2') }, tap(k('E')), { tap: k('R'), hold: k('LALT'), retroTap: true }, { tap: k('T'), shifted: k('N5'), hold: k('LCTRL') },
     tap(k('Y')), tap(k('U')), tap(k('I')), tap(k('O')), tap(k('P')), { tap: { type: 'macro', id: 'm-email' } },
     // row 1 — home row mods (positional)
     { tap: k('ESC'), hold: k('LCTRL') },
@@ -27,7 +27,7 @@ export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb
     { tap: k('LGUI') },
     { tap: k('ESC'), hold: { type: 'layer', mode: 'mo', layer: 'l-nav' } },
     { tap: k('SPACE'), hold: { type: 'layer', mode: 'tog', layer: 'l-nav' } },
-    { tap: k('BSPC'), hold: k('LCTRL'), doubleTap: k('DEL'), tapHold: { type: 'layer', mode: 'mo', layer: 'l-sys' } },
+    { tap: k('BSPC'), shifted: k('DEL'), hold: k('LCTRL'), doubleTap: k('DEL'), tapHold: { type: 'layer', mode: 'mo', layer: 'l-sys' } },
     { tap: k('RET'), hold: { type: 'behavior', behavior: 'caps_word', params: [] } },
     { tap: k('TAB'), hold: { type: 'behavior', behavior: 'bt', params: ['BT_CLR'] } },
   ]
@@ -96,7 +96,7 @@ export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb
       '        compatible = "zmk,behavior-mod-morph";',
       '        #binding-cells = <0>;',
       '        bindings = <&kp BSPC>, <&kp DEL>;',
-      '        mods = <(MOD_LSFT|MOD_RSFT)>;',
+      '        mods = <(MOD_LCTL|MOD_RCTL)>;',
       '    };',
       '};',
     ].join('\n'),
@@ -109,9 +109,9 @@ export function kitchenSinkLayout(keyboard = 'corne', keyCount = 42, opts: { rgb
     tags: [],
     keyboard,
     layers: [
-      { id: 'l-base', name: 'Base', keys: fit(base) },
-      { id: 'l-nav', name: 'Nav & Mouse', keys: fit(nav) },
-      { id: 'l-sys', name: 'Sys', keys: fit(sys) },
+      { id: 'l-base', name: 'Base', keys: fit(base), ...(opts.encoders ? { encoders: [{ cw: k('C_VOL_UP'), ccw: k('C_VOL_DN') }, { cw: k('PG_DN'), ccw: k('PG_UP') }] } : {}) },
+      { id: 'l-nav', name: 'Nav & Mouse', keys: fit(nav), ...(opts.encoders ? { encoders: [{}, { cw: { type: 'behavior', behavior: 'bt', params: ['BT_NXT'] }, ccw: { type: 'behavior', behavior: 'bt', params: ['BT_PRV'] } }] } : {}) },
+      { id: 'l-sys', name: 'Sys', keys: fit(sys), ...(opts.encoders ? { encoders: [{ cw: k('TAB', ['LCTRL']), ccw: k('TAB', ['LCTRL', 'LSHIFT']) }, { cw: k('RIGHT'), ccw: { type: 'macro', id: 'm-email' } }] } : {}) },
     ],
     combos: [
       { id: 'c1', name: 'esc', keys: [1, 2], action: k('ESC'), layers: [] },

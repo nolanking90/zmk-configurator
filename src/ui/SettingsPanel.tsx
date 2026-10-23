@@ -58,6 +58,7 @@ export function SettingsPanel({ layout, kb }: { layout: Layout; kb: KeyboardDef 
           </label>
         </div>
         {bool('positionalHoldTap', 'Opposite-hand only (positional hold-tap)', kb.hands ? 'Modifier holds only trigger when the next key is on the other hand — reduces home-row-mod misfires.' : 'Not available: this keyboard has no hand information.')}
+        {bool('holdWhileUndecided', 'Hold while undecided', 'Activate the hold (e.g. a modifier) immediately while waiting to decide; it is released if the key turns out to be a tap. Handy for mod+click.')}
         {bool('holdTriggerOnRelease', 'Decide on release', 'With opposite-hand only: wait until the other key is released before deciding (lets you combine same-hand mods).')}
       </section>
 

@@ -5,12 +5,13 @@ import { ActionPicker } from './ActionPicker'
 import { actionLabel } from '../lib/labels'
 import { ColorPicker } from './ColorPicker'
 
-type Slot = 'tap' | 'hold' | 'doubleTap' | 'tapHold'
+type Slot = 'tap' | 'hold' | 'doubleTap' | 'tapHold' | 'shifted'
 const SLOTS: { id: Slot; name: string; help: string }[] = [
   { id: 'tap', name: 'Tap', help: 'Sent when the key is tapped.' },
   { id: 'hold', name: 'Hold', help: 'Sent when the key is held past the tapping term (mod-tap / layer-tap).' },
   { id: 'doubleTap', name: 'Double tap', help: 'Sent when the key is tapped twice quickly (tap dance).' },
   { id: 'tapHold', name: 'Tap + hold', help: 'Sent when the key is tapped once, then held (tap dance).' },
+  { id: 'shifted', name: 'Shifted', help: 'Sent instead of the tap action while Shift is held (mod-morph), e.g. , → ;' },
 ]
 
 export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateMacro: () => void }) {
@@ -89,7 +90,7 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
           value={key[slot]}
           onChange={setAction}
           layout={layout}
-          slot={slot}
+          slot={slot === 'shifted' ? 'tap' : slot}
           allowEmpty={slot !== 'tap'}
           onCreateMacro={onCreateMacro}
         />
@@ -108,6 +109,12 @@ export function KeyEditor({ layout, onCreateMacro }: { layout: Layout; onCreateM
             Key color
             <ColorPicker value={key.color} onChange={(c) => edit((k) => { if (c) k.color = c; else delete k.color })} />
           </div>
+          {key.hold && key.hold.type !== 'none' && (
+            <label className="check small" title="If you hold the key past the tapping term and release it without pressing another key, send the tap anyway">
+              <input type="checkbox" checked={!!key.retroTap} onChange={(e) => edit((k) => { if (e.target.checked) k.retroTap = true; else delete k.retroTap })} />
+              Retro tap
+            </label>
+          )}
           {(key.hold || key.doubleTap || key.tapHold) && (
             <label className="field" title="Overrides the global tapping term for this key">
               Tapping term (ms)

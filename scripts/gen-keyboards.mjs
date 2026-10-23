@@ -408,6 +408,16 @@ function countBindings(keymapFile) {
   return (layer.props.bindings.match(/&/g) || []).length
 }
 
+function countSensorBindings(keymapFile) {
+  if (!keymapFile || !fs.existsSync(keymapFile)) return 0
+  const defines = new Map()
+  const src = preprocess(keymapFile, new Set(), defines)
+  const dt = parseDts(expandDefines(src, defines))
+  const km = dt.all.find((n) => compatibleOf(n) === 'zmk,keymap')
+  const layer = km?.children.find((c) => typeof c.props['sensor-bindings'] === 'string')
+  return layer ? (layer.props['sensor-bindings'].match(/&/g) || []).length : 0
+}
+
 // ------------------------------------------------------------- geometry
 
 const round = (v) => Math.round(v * 1000) / 1000
@@ -529,6 +539,11 @@ for (const meta of metas) {
     .map((n) => path.join(dir, `${n}.keymap`))
     .find((f) => fs.existsSync(f))
   const bindingCount = countBindings(keymapFile)
+  // rotary encoders: entries of the zmk,keymap-sensors node, else the stock keymap's sensor-bindings
+  const sensorsNode = dt.all.find((n) => compatibleOf(n) === 'zmk,keymap-sensors')
+  const encoders = (sensorsNode && typeof sensorsNode.props.sensors === 'string'
+    ? (sensorsNode.props.sensors.match(/&/g) || []).length
+    : 0) || countSensorBindings(keymapFile)
   const baseName = NAME_OVERRIDES[meta.id] ?? meta.name
   const common = {
     zmkName,
@@ -537,6 +552,7 @@ for (const meta of metas) {
       ? { shields: siblings, defaultController: DEFAULT_CONTROLLER[(meta.requires ?? [])[0]] ?? 'nice_nano_v2' }
       : { boards: siblings }),
     split,
+    ...(encoders ? { encoders } : {}),
   }
 
   const hands = (keys, map, transformLabel) => {

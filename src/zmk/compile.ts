@@ -46,6 +46,7 @@ interface HoldTapCfg {
   tap: SubBinding
   term?: number
   side?: 'L' | 'R'
+  retro?: boolean
 }
 
 class Compiler {
@@ -61,6 +62,8 @@ class Compiler {
 
   private holdTaps = new Map<string, { label: string; node: string }>()
   private tapDances = new Map<string, { label: string; node: string }>()
+  private modMorphs = new Map<string, { label: string; node: string }>()
+  private sensorRotates = new Map<string, { label: string; node: string }>()
   private wrappers = new Map<string, { label: string; node: string }>()
 
   readonly layout: Layout
@@ -240,15 +243,18 @@ class Compiler {
   /** Binding for a key position (tap / hold / double-tap / tap-hold). */
   key(k: KeyConfig | undefined, pos: number): string {
     if (!k) return this.ref('none')
+    // mod-morph: the shifted variant replaces the tap action wherever it is used
+    const tap = k.shifted ? this.modMorph(k.tap, k.shifted) : k.tap
+    const retro = !!k.retroTap
     if (k.doubleTap || k.tapHold) {
-      const first = this.tapHold(k.tap, k.hold, k.tappingTerm, pos)
-      const second = this.tapHold(k.doubleTap ?? k.tap, k.tapHold, k.tappingTerm, pos)
+      const first = this.tapHold(tap, k.hold, k.tappingTerm, pos, retro)
+      const second = this.tapHold(k.doubleTap ?? tap, k.tapHold, k.tappingTerm, pos, retro)
       return this.tapDance(first, second)
     }
-    return this.tapHold(k.tap, k.hold, k.tappingTerm, pos)
+    return this.tapHold(tap, k.hold, k.tappingTerm, pos, retro)
   }
 
-  private tapHold(tap: Action | undefined, hold: Action | undefined, term: number | undefined, pos: number): string {
+  private tapHold(tap: Action | undefined, hold: Action | undefined, term: number | undefined, pos: number, retro = false): string {
     if (!hold) return this.action(tap)
     if (!tap) return this.action(hold)
     if (term === this.s.tappingTerm) term = undefined
@@ -256,15 +262,95 @@ class Compiler {
     const holdMod = this.modifierParam(hold)
     const side = holdMod !== undefined && this.s.positionalHoldTap ? this.hand(pos) : undefined
 
-    if (tap.type === 'key' && hold.type === 'key' && term === undefined && !side) {
+    if (tap.type === 'key' && hold.type === 'key' && term === undefined && !side && !retro) {
       return `${this.ref('mt')} ${this.keyParam(hold.code, hold.mods)} ${this.keyParam(tap.code, tap.mods)}`
     }
-    if (tap.type === 'key' && hold.type === 'layer' && hold.mode === 'mo' && term === undefined) {
+    if (tap.type === 'key' && hold.type === 'layer' && hold.mode === 'mo' && term === undefined && !retro) {
       return `${this.ref('lt')} ${this.layerRef(hold.layer)} ${this.keyParam(tap.code, tap.mods)}`
     }
-    const cfg: HoldTapCfg = { hold: this.sub(hold), tap: this.sub(tap), term, side }
+    const cfg: HoldTapCfg = { hold: this.sub(hold), tap: this.sub(tap), term, side, retro }
     return `${this.holdTap(cfg)} ${cfg.hold.param} ${cfg.tap.param}`
   }
+
+  /** Shift-morph: `tap` normally, `shifted` while either Shift is held. Returns a 0-param raw action. */
+  private modMorph(tap: Action | undefined, shifted: Action): Action {
+    const a = this.action(tap)
+    const b = this.action(shifted)
+    const key = JSON.stringify([a, b])
+    let mm = this.modMorphs.get(key)
+    if (!mm) {
+      const label = uniqueName(`mm_${sanitizeIdent(a.replace(/&/g, ''), 'k').slice(0, 24)}`, this.labels)
+      const node = [
+        `${I2}${label}: ${label} {`,
+        `${I3}compatible = "zmk,behavior-mod-morph";`,
+        `${I3}#binding-cells = <0>;`,
+        `${I3}bindings = <${a}>, <${b}>;`,
+        `${I3}mods = <(MOD_LSFT|MOD_RSFT)>;`,
+        `${I2}};`,
+      ].join('\n')
+      mm = { label, node }
+      this.modMorphs.set(key, mm)
+    }
+    this.refs.add(mm.label)
+    return { type: 'raw', code: `&${mm.label}` }
+  }
+
+  // ---- encoders -----------------------------------------------------------
+
+  /** sensor-bindings for one layer, or undefined if every encoder is transparent. */
+  sensorBindings(layer: { name: string; encoders?: { cw?: Action; ccw?: Action }[] }): string | undefined {
+    const n = this.kb.encoders ?? 0
+    const enc = layer.encoders ?? []
+    if (!n) {
+      if (enc.some((e) => e && (e.cw || e.ccw))) this.warn(`Layer "${layer.name}" has encoder bindings but ${this.kb.name} has no encoders; ignored`)
+      return undefined
+    }
+    if (enc.length > n) this.warn(`Layer "${layer.name}" has ${enc.length} encoder entries, ${this.kb.name} has ${n}; extra ones ignored`)
+    const isTrans = (a?: Action) => !a || a.type === 'trans'
+    const out: string[] = []
+    for (let i = 0; i < n; i++) {
+      const e = enc[i]
+      if (!e || (isTrans(e.cw) && isTrans(e.ccw))) {
+        out.push('&trans')
+        continue
+      }
+      if (isTrans(e.cw) !== isTrans(e.ccw)) this.warn(`Layer "${layer.name}" encoder ${i + 1}: one direction is transparent; it does nothing instead`)
+      const cw = isTrans(e.cw) ? { type: 'none' } as Action : e.cw!
+      const ccw = isTrans(e.ccw) ? { type: 'none' } as Action : e.ccw!
+      const kp = (a: Action) => (a.type === 'key' ? this.keyParam(a.code, a.mods) : a.type === 'none' ? 'NONE' : undefined)
+      const pc = kp(cw)
+      const pcc = kp(ccw)
+      if (pc !== undefined && pcc !== undefined && (cw.type === 'key' || ccw.type === 'key')) {
+        this.refs.add('kp')
+        out.push(`&inc_dec_kp ${pc} ${pcc}`)
+      } else out.push(this.sensorRotate(this.action(cw), this.action(ccw)))
+    }
+    while (out.length && out[out.length - 1] === '&trans') out.pop()
+    if (out.includes('&trans')) this.sensorTrans = true
+    return out.length ? out.join(' ') : undefined
+  }
+
+  private sensorRotate(cw: string, ccw: string): string {
+    const key = JSON.stringify([cw, ccw])
+    let sr = this.sensorRotates.get(key)
+    if (!sr) {
+      const label = uniqueName(`enc_${sanitizeIdent(cw.replace(/&/g, ''), 'b').slice(0, 24)}`, this.labels)
+      const node = [
+        `${I2}${label}: ${label} {`,
+        `${I3}compatible = "zmk,behavior-sensor-rotate";`,
+        `${I3}#sensor-binding-cells = <0>;`,
+        `${I3}bindings = <${cw}>, <${ccw}>;`,
+        `${I2}};`,
+      ].join('\n')
+      sr = { label, node }
+      this.sensorRotates.set(key, sr)
+    }
+    return `&${sr.label}`
+  }
+
+  usesEncoders = false
+  /** &trans used inside sensor-bindings (needs #sensor-binding-cells, see below) */
+  sensorTrans = false
 
   private hand(pos: number): 'L' | 'R' | undefined {
     const h = this.kb.hands?.[pos]
@@ -277,6 +363,7 @@ class Compiler {
     const out = [`flavor = "${s.holdTapFlavor}";`, `tapping-term-ms = <${s.tappingTerm}>;`]
     if (s.quickTap > 0) out.push(`quick-tap-ms = <${s.quickTap}>;`)
     if (s.requirePriorIdle > 0) out.push(`require-prior-idle-ms = <${s.requirePriorIdle}>;`)
+    if (s.holdWhileUndecided) out.push('hold-while-undecided;')
     return out
   }
 
@@ -297,13 +384,14 @@ class Compiler {
   }
 
   private holdTap(cfg: HoldTapCfg): string {
-    const key = JSON.stringify([cfg.hold.ref, cfg.tap.ref, cfg.term, cfg.side])
+    const key = JSON.stringify([cfg.hold.ref, cfg.tap.ref, cfg.term, cfg.side, cfg.retro])
     let ht = this.holdTaps.get(key)
     if (!ht) {
       const h = cfg.hold.ref.slice(1)
       const t = cfg.tap.ref.slice(1)
       let base = h === 'kp' && t === 'kp' ? 'mt' : h === 'mo' && t === 'kp' ? 'lt' : `ht_${h}_${t}`
       if (cfg.side) base += `_${cfg.side.toLowerCase()}`
+      if (cfg.retro) base += '_rt'
       if (cfg.term !== undefined) base += `_${cfg.term}`
       const label = uniqueName(sanitizeIdent(base, 'ht'), this.labels)
       const props = [
@@ -318,6 +406,7 @@ class Compiler {
         props.push(`hold-trigger-key-positions = <${opposite.join(' ')}>;`)
       }
       if (this.s.holdTriggerOnRelease) props.push('hold-trigger-on-release;')
+      if (cfg.retro) props.push('retro-tap;')
       const node = [`${I2}${label}: ${label} {`, ...props.map((p) => I3 + p), `${I2}};`].join('\n')
       ht = { label, node }
       this.holdTaps.set(key, ht)
@@ -436,7 +525,7 @@ class Compiler {
 
   synthesizedNodes(): { behaviors: string[]; macros: string[] } {
     return {
-      behaviors: [...this.holdTaps.values(), ...this.tapDances.values()].map((x) => x.node),
+      behaviors: [...this.modMorphs.values(), ...this.holdTaps.values(), ...this.tapDances.values(), ...this.sensorRotates.values()].map((x) => x.node),
       macros: [...this.wrappers.values()].map((x) => x.node),
     }
   }
@@ -491,6 +580,39 @@ function formatBindings(bindings: string[], kb: KeyboardDef, indent: string): st
     .join('\n')
 }
 
+/**
+ * extraKeymap is placed inside the root node, except `&label { ... };`
+ * overrides (e.g. enabling an encoder node), which must be at top level.
+ */
+export function splitExtraKeymap(text: string): { inner: string; top: string } {
+  const inner: string[] = []
+  const top: string[] = []
+  let i = 0
+  const src = text.trim()
+  while (i < src.length) {
+    // one top-level statement: up to `;` at brace depth 0
+    let depth = 0
+    let j = i
+    let inStr = false
+    for (; j < src.length; j++) {
+      const ch = src[j]
+      if (inStr) {
+        if (ch === '\\') j++
+        else if (ch === '"') inStr = false
+      } else if (ch === '"') inStr = true
+      else if (ch === '{') depth++
+      else if (ch === '}') depth--
+      else if (ch === ';' && depth <= 0) break
+    }
+    const stmt = src.slice(i, j + 1).trim()
+    if (stmt) (stmt.startsWith('&') ? top : inner).push(stmt)
+    i = j + 1
+  }
+  // keep hand-written formatting untouched unless something needs hoisting
+  if (!top.length) return { inner: src, top: '' }
+  return { inner: inner.join('\n\n'), top: top.join('\n\n') }
+}
+
 function dtString(s: string): string {
   return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
 }
@@ -524,12 +646,15 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
       bindings.push(k ? c.key(k, i) : li === 0 ? '&none' : '&trans')
     }
     const nodeName = uniqueName(`${sanitizeIdent(layer.name, 'layer')}_layer`, usedNodeNames)
+    const sensors = c.sensorBindings(layer)
+    if (sensors !== undefined) c.usesEncoders = true
     layerNodes.push([
       `${I2}${nodeName} {`,
       `${I3}display-name = ${dtString(layer.name)};`,
       `${I3}bindings = <`,
       formatBindings(bindings, kb, I3 + I1),
       `${I3}>;`,
+      ...(sensors !== undefined ? [`${I3}sensor-bindings = <${sensors}>;`] : []),
       `${I2}};`,
     ].join('\n'))
   })
@@ -578,6 +703,12 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
     if (s.stickyQuickRelease) p.push('quick-release;')
     if (p.length) overrides.push(`&sk {\n${p.map((x) => I1 + x).join('\n')}\n};`)
   }
+  if (c.sensorTrans) {
+    // &trans has no #sensor-binding-cells, so devicetree rejects it in sensor-bindings.
+    // With the property it is accepted; at runtime it does not handle sensor data,
+    // and the keymap falls through to the next active layer.
+    overrides.push(`&trans {\n${I1}#sensor-binding-cells = <0>;\n};`)
+  }
   if (c.refs.has('sl') && s.stickyKeyTimeout !== ZMK.stickyReleaseMs) {
     overrides.push(`&sl {\n${I1}release-after-ms = <${s.stickyKeyTimeout}>;\n};`)
   }
@@ -593,11 +724,16 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
   if (allMacros.length) sections.push(`${I1}macros {\n${allMacros.join('\n\n')}\n${I1}};`)
   if (comboNodes.length) sections.push(`${I1}combos {\n${I2}compatible = "zmk,combos";\n\n${comboNodes.join('\n\n')}\n${I1}};`)
   sections.push(`${I1}keymap {\n${I2}compatible = "zmk,keymap";\n\n${layerNodes.join('\n\n')}\n${I1}};`)
-  if (s.extraKeymap.trim()) {
-    sections.push(s.extraKeymap.trim().split('\n').map((l) => (l ? I1 + l : l)).join('\n'))
+  const extra = splitExtraKeymap(s.extraKeymap ?? '')
+  if (extra.inner) {
+    sections.push(extra.inner.split('\n').map((l) => (l ? I1 + l : l)).join('\n'))
   }
   out.push(sections.join('\n\n'))
   out.push('};')
+  if (extra.top) {
+    out.push('')
+    out.push(extra.top)
+  }
   if (kb.notes?.trim()) {
     out.push('')
     out.push(kb.notes.trim())
@@ -606,6 +742,9 @@ export function compileKeymap(layout: Layout, kb: KeyboardDef): CompileResult {
   out.push(`/* ${METADATA_PREFIX}${LZString.compressToBase64(JSON.stringify(layout))} */`)
   out.push('')
 
+  // encoders: the shield/board enables its encoder nodes; the EC11 driver is opt-in
+  buildTargets(layout, kb, c.warnings)
+  if (c.usesEncoders) behaviorKconfig.push('CONFIG_EC11=y', 'CONFIG_EC11_TRIGGER_GLOBAL_THREAD=y')
   const { conf, centralConf } = compileConf(layout, kb, behaviorKconfig)
   return { keymap: out.join('\n'), conf, centralConf, warnings: c.warnings }
 }
@@ -673,15 +812,74 @@ function compileConf(layout: Layout, kb: KeyboardDef, behaviorKconfig: string[])
 // ---------------------------------------------------------------------------
 // repository
 
+/** ZMK revisions that still use Zephyr's hardware model v1 board names (v0.3 and older). */
+export function isHwmV1Revision(rev: string): boolean {
+  return /^v0\.[0-3](\b|[.-]|$)/.test(rev)
+}
+
+/**
+ * v0.3 board name -> HWMv2 name used by ZMK main (Zephyr 4.1). From the table in
+ * docs/blog/2025-12-09-zephyr-4-1.md and app/boards/** /board.yml on main
+ * (every in-tree board except glove80 gained a `zmk` variant).
+ */
+export const HWMV2_BOARD_NAMES: Record<string, string> = {
+  nice_nano: 'nice_nano@1//zmk',
+  nice_nano_v2: 'nice_nano//zmk',
+  nrfmicro_11: 'nrfmicro@1.1/nrf52840/zmk',
+  nrfmicro_11_flipped: 'nrfmicro@1.1/nrf52840/flipped_zmk',
+  nrfmicro_13: 'nrfmicro/nrf52840/zmk',
+  nrfmicro_13_52833: 'nrfmicro/nrf52833/zmk',
+  mikoto: 'mikoto//zmk',
+  seeeduino_xiao_rp2040: 'xiao_rp2040//zmk',
+  seeeduino_xiao_ble: 'xiao_ble//zmk',
+  seeeduino_xiao: 'seeeduino_xiao//zmk',
+  bluemicro840_v1: 'bluemicro840//zmk',
+  puchi_ble_v1: 'puchi_ble//zmk',
+  sparkfun_pro_micro_rp2040: 'sparkfun_pro_micro_rp2040//zmk',
+  adafruit_kb2040: 'adafruit_kb2040//zmk',
+  adafruit_qt_py_rp2040: 'adafruit_qt_py_rp2040//zmk',
+  boardsource_blok: 'boardsource_blok//zmk',
+  proton_c: 'proton_c//zmk',
+  nrf52840_m2: 'nrf52840_m2//zmk',
+  adv360pro_left: 'adv360pro_left//zmk',
+  adv360pro_right: 'adv360pro_right//zmk',
+  bdn9_rev2: 'bdn9//zmk',
+  bt60_v1: 'bt60@1//zmk',
+  bt60_v2: 'bt60//zmk',
+  bt60_v1_hs: 'bt60_hs//zmk',
+  bt65_v1: 'bt65//zmk',
+  bt75_v1: 'bt75//zmk',
+  corneish_zen_v1_left: 'corneish_zen_left@1//zmk',
+  corneish_zen_v1_right: 'corneish_zen_right@1//zmk',
+  corneish_zen_v2_left: 'corneish_zen_left//zmk',
+  corneish_zen_v2_right: 'corneish_zen_right//zmk',
+  ferris_rev02: 'ferris//zmk',
+  glove80_lh: 'glove80_lh',
+  glove80_rh: 'glove80_rh',
+  kbdfans_tofu65_v2: 'tofu65//zmk',
+  nice60: 'nice60//zmk',
+  planck_rev6: 'planck//zmk',
+  preonic_rev3: 'preonic//zmk',
+  s40nc: 's40nc//zmk',
+}
+
 /** Build targets: [{board, shield?, central}] — the first target is the split central. */
-export function buildTargets(layout: Layout, kb: KeyboardDef): { board: string; shield?: string; central: boolean }[] {
+export function buildTargets(layout: Layout, kb: KeyboardDef, warnings?: string[]): { board: string; shield?: string; central: boolean }[] {
+  const rev = layout.settings.zmkRevision || 'main'
+  const name = (b: string) => {
+    if (isHwmV1Revision(rev) || b.includes('/') || b.includes('@')) return b
+    const v2 = HWMV2_BOARD_NAMES[b]
+    if (v2) return v2
+    warnings?.push(`Board "${b}" has no known HWMv2 name for ZMK ${rev}; check the board name in build.yaml`)
+    return b
+  }
   if (kb.kind === 'shield') {
-    const board = layout.controller ?? kb.defaultController ?? 'nice_nano_v2'
+    const board = name(layout.controller ?? kb.defaultController ?? 'nice_nano_v2')
     const shields = kb.shields?.length ? kb.shields : [kb.zmkName]
     return shields.map((shield, i) => ({ board, shield, central: i === 0 }))
   }
   const boards = kb.boards?.length ? kb.boards : [kb.zmkName]
-  return boards.map((board, i) => ({ board, central: i === 0 }))
+  return boards.map((board, i) => ({ board: name(board), central: i === 0 }))
 }
 
 export function generateConfigRepo(layout: Layout, kb: KeyboardDef): Record<string, string> {
@@ -736,7 +934,8 @@ export function generateConfigRepo(layout: Layout, kb: KeyboardDef): Record<stri
   files[`config/${kb.zmkName}.conf`] = conf
   const central = targets.find((t) => t.central)
   if (kb.split && central && centralConf.split('\n').some((l) => l.startsWith('CONFIG_'))) {
-    const name = central.shield ?? central.board
+    // HWMv2 names carry @revision / qualifiers; the conf file uses the bare board name
+    const name = central.shield ?? central.board.split(/[@/]/)[0]
     if (name !== kb.zmkName) files[`config/${name}.conf`] = centralConf
   }
   files['config/zmk-configurator.json'] = JSON.stringify(layout, null, 2) + '\n'

@@ -20,7 +20,7 @@ if (!kb) {
   console.error(`unknown keyboard ${kbId}`)
   process.exit(2)
 }
-const layout: Layout = layoutFile ? JSON.parse(readFileSync(layoutFile, 'utf8')) : kitchenSinkLayout(kb.id, kb.keys.length, { rgb: !!process.env.RGB })
+const layout: Layout = layoutFile ? JSON.parse(readFileSync(layoutFile, 'utf8')) : kitchenSinkLayout(kb.id, kb.keys.length, { rgb: !!process.env.RGB, encoders: !!kb.encoders })
 if (process.env.SETTINGS) Object.assign(layout.settings, JSON.parse(process.env.SETTINGS))
 
 rmSync(out, { recursive: true, force: true })

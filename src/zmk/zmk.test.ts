@@ -79,7 +79,7 @@ describe('compileKeymap', () => {
   })
 
   it('tap dance with a hold-tap inside', () => {
-    expect(km).toMatch(/td_\w+: td_\w+ \{[^}]*zmk,behavior-tap-dance[^}]*tapping-term-ms = <180>;[^}]*bindings = <&mt_r LCTRL BSPC>, <&lt SYS DEL>;/)
+    expect(km).toMatch(/td_\w+: td_\w+ \{[^}]*zmk,behavior-tap-dance[^}]*tapping-term-ms = <180>;[^}]*bindings = <&ht_kp_mm_kp_bspc_r LCTRL 0>, <&lt SYS DEL>;/)
   })
 
   it('stock overrides for &lt / &sk / &sl', () => {
@@ -312,9 +312,11 @@ describe('importKeymap', () => {
     expect(base[10]).toEqual({ tap: { type: 'key', code: 'A' }, hold: { type: 'key', code: 'LGUI' }, tappingTerm: 280 })
     // &lt_spc NAV 0: hold-tap of <&mo>, <&spc_morph> -> mod-morph is kept raw
     expect(base[30].hold).toEqual({ type: 'layer', mode: 'mo', layer: layout.layers[1].id })
-    expect(base[30].tap).toEqual({ type: 'raw', code: '&spc_morph' })
-    expect(layout.settings.extraKeymap).toContain('spc_morph: spc_morph {')
-    expect(layout.settings.extraKeymap).toContain('dot_spc') // referenced from spc_morph, kept as macro
+    // ... whose tap is a shift mod-morph: space / dot_spc macro
+    expect(base[30].tap).toEqual({ type: 'key', code: 'SPACE' })
+    expect(base[30].shifted).toEqual({ type: 'macro', id: layout.macros.find((m) => m.name === 'dot_spc')!.id })
+    // non-shift mod-morphs stay raw and are kept as devicetree
+    expect(layout.settings.extraKeymap).toContain('masked_home: masked_home {')
     expect(layout.settings.holdTapFlavor).toBe('tap-preferred') // from &mt { MT_CORE }
     expect(layout.settings.stickyKeyTimeout).toBe(900)
     // tap dance: copy / cut
@@ -424,6 +426,100 @@ describe('importConf', () => {
     expect(s.rgbUnderglow).toBe(true)
     expect(s.rgbAutoOffIdle).toBe(false)
     expect(s.extraConf).toBe('CONFIG_FOO=y')
+  })
+})
+
+describe('mod-morph, retro-tap, encoders, HWMv2', () => {
+  const sofle = getKeyboard('sofle')!
+  const ks = () => {
+    const l = kitchenSinkLayout('sofle', sofle.keys.length, { encoders: true })
+    l.settings.holdWhileUndecided = true
+    return l
+  }
+
+  it('compiles shift mod-morphs, also as hold-tap tap and inside tap dances', () => {
+    const km = compileKeymap(ks(), sofle).keymap
+    expect(km).toMatch(/mm_kp_w: mm_kp_w \{[^}]*compatible = "zmk,behavior-mod-morph";[^}]*bindings = <&kp W>, <&kp N2>;[^}]*mods = <\(MOD_LSFT\|MOD_RSFT\)>;/)
+    expect(km).toContain('&mm_kp_w ')
+    expect(km).toContain('bindings = <&kp>, <&mm_kp_t>;')
+    expect(km).toMatch(/bindings = <&ht_kp_mm_kp_bspc_\w LCTRL 0>, <&lt SYS DEL>;/)
+  })
+
+  it('retro-tap gets its own hold-tap; hold-while-undecided is global', () => {
+    const km = compileKeymap(ks(), sofle).keymap
+    expect(km).toMatch(/mt_l_rt: mt_l_rt \{[^}]*retro-tap;/)
+    expect(km).toContain('&mt_l_rt LALT R')
+    expect(km).toMatch(/ht_tog_kp: ht_tog_kp \{[^}]*hold-while-undecided;/)
+  })
+
+  it('emits sensor-bindings and enables EC11', () => {
+    const r = compileKeymap(ks(), sofle)
+    expect(r.keymap).toContain('sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN &inc_dec_kp PG_DN PG_UP>;')
+    expect(r.keymap).toContain('sensor-bindings = <&trans &enc_bt_bt_nxt>;')
+    expect(r.keymap).toMatch(/enc_bt_bt_nxt: enc_bt_bt_nxt \{[^}]*zmk,behavior-sensor-rotate[^}]*#sensor-binding-cells = <0>;[^}]*bindings = <&bt BT_NXT>, <&bt BT_PRV>;/)
+    expect(r.keymap).toContain('sensor-bindings = <&inc_dec_kp LC(TAB) LC(LS(TAB)) &enc_kp_right>;')
+    expect(r.keymap).toContain('&trans {\n    #sensor-binding-cells = <0>;\n};')
+    expect(r.conf).toContain('CONFIG_EC11=y')
+    expect(r.conf).toContain('CONFIG_EC11_TRIGGER_GLOBAL_THREAD=y')
+    expect(r.warnings).toEqual([])
+    // keyboards without encoders: nothing emitted
+    const c = compileKeymap(kitchenSinkLayout('corne', 42, { encoders: true }), corne)
+    expect(c.keymap).not.toContain('sensor-bindings')
+    expect(c.conf).not.toContain('EC11')
+  })
+
+  it('round-trips the new features through the devicetree', () => {
+    const layout = ks()
+    const first = compileKeymap(layout, sofle).keymap
+    const { layout: imported, warnings } = importKeymap(stripMeta(first), sofle, { name: layout.name })
+    expect(warnings).toEqual([])
+    const base = imported.layers[0]
+    expect(base.keys[2]).toEqual({ tap: { type: 'key', code: 'W' }, shifted: { type: 'key', code: 'N2' } })
+    expect(base.keys[4]).toEqual({ tap: { type: 'key', code: 'R' }, hold: { type: 'key', code: 'LALT' }, retroTap: true })
+    expect(base.encoders).toEqual([
+      { cw: { type: 'key', code: 'C_VOL_UP' }, ccw: { type: 'key', code: 'C_VOL_DN' } },
+      { cw: { type: 'key', code: 'PG_DN' }, ccw: { type: 'key', code: 'PG_UP' } },
+    ])
+    expect(imported.layers[1].encoders![0]).toEqual({})
+    expect(imported.settings.holdWhileUndecided).toBe(true)
+    imported.settings.studio = layout.settings.studio
+    expect(body(compileKeymap(imported, sofle).keymap)).toBe(body(first))
+  })
+
+  it('imports the stock sofle keymap encoders', () => {
+    const { layout } = importKeymap((defaultKeymaps as Record<string, string>).sofle, sofle)
+    expect(layout.layers[0].encoders).toEqual([
+      { cw: { type: 'key', code: 'C_VOL_UP' }, ccw: { type: 'key', code: 'C_VOL_DN' } },
+      { cw: { type: 'key', code: 'PG_UP' }, ccw: { type: 'key', code: 'PG_DN' } },
+    ])
+  })
+
+  it('keeps hardware overrides (encoder enable) at top level', () => {
+    const src = '&left_encoder { status = "okay"; };\n/ { keymap { compatible = "zmk,keymap"; a { bindings = <&kp A>; }; }; };'
+    const { layout, warnings } = importKeymap(src, mini)
+    expect(warnings.some((w) => w.includes('left_encoder'))).toBe(false)
+    expect(layout.settings.extraKeymap).toContain('&left_encoder {')
+    const km = compileKeymap(layout, mini).keymap
+    expect(km).toMatch(/\n\};\n\n&left_encoder \{\n {4}status = "okay";\n\};/)
+  })
+
+  it('translates board names for HWMv2 revisions', () => {
+    const l = newLayout('corne', 42)
+    l.settings.zmkRevision = 'main'
+    expect(generateConfigRepo(l, corne)['build.yaml']).toContain('board: nice_nano//zmk')
+    const z = getKeyboard('corneish_zen_v1')!
+    const lz = newLayout(z.id, z.keys.length)
+    lz.settings.zmkRevision = 'main'
+    lz.settings.btMaxConnections = 3
+    const files = generateConfigRepo(lz, z)
+    expect(files['build.yaml']).toContain('board: corneish_zen_left@1//zmk')
+    expect(files['config/corneish_zen_left.conf']).toContain('CONFIG_BT_MAX_CONN=4')
+    const d = getKeyboard('dz60rgb_rev1')!
+    const ld = newLayout(d.id, d.keys.length)
+    ld.settings.zmkRevision = 'main'
+    expect(compileKeymap(ld, d).warnings.join()).toContain('HWMv2')
+    l.settings.zmkRevision = 'v0.3'
+    expect(generateConfigRepo(l, corne)['build.yaml']).toContain('board: nice_nano_v2')
   })
 })
 
